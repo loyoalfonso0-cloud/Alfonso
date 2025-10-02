@@ -1,5 +1,4 @@
 package com.example.demo.web;
-
 import com.example.demo.auditoria.repository.AuditoriaLogRepository;
 import com.example.demo.personal.repository.PersonalRepository;
 import com.example.demo.security.repository.RolRepository;
