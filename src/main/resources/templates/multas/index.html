@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Gestión de Multas - Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons-professional.css}">
+    <link rel="stylesheet" th:href="@{/css/icons.css}">
+    <script th:src="@{/js/theme.js}"></script>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header -->
+        <div class="fullscreen-header">
+            <h2 style="margin:0;color:#e2e8f0;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="page-title-icon">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14,2 14,8 20,8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10,9 9,9 8,9"/>
+                </svg>
+                Gestión de Multas
+            </h2>
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="btn-modern btn-modern-success" sec:authorize="hasAnyAuthority('MULTAS_WRITE','MULTAS_GESTIONAR')" onclick="abrirModalNuevaMulta()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nueva Multa
+                </button>
+                <button class="btn-modern btn-modern-export" onclick="exportarMultas()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contenido -->
+        <div class="fullscreen-content">
+            <!-- Estadísticas rápidas -->
+            <div class="fullscreen-stats">
+                <div class="stat-card" style="border-left:4px solid #8b5cf6">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Total Multas</div>
+                    <div style="font-size:32px;font-weight:700;color:#8b5cf6" th:text="${estadisticas.totalMultas}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #f59e0b">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Pendientes</div>
+                    <div style="font-size:32px;font-weight:700;color:#f59e0b" th:text="${estadisticas.multasPendientes}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #10b981">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Pagadas</div>
+                    <div style="font-size:32px;font-weight:700;color:#10b981" th:text="${estadisticas.multasPagadas}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #ef4444">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Vencidas</div>
+                    <div style="font-size:32px;font-weight:700;color:#ef4444" th:text="${estadisticas.multasVencidas}">0</div>
+                </div>
+            </div>
+
+            <!-- Tabla de multas -->
+            <div class="fullscreen-table-container">
+                <div style="padding:20px;border-bottom:1px solid rgba(148, 163, 184, 0.2)">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <h3 style="margin:0;color:#e2e8f0;font-size:18px;font-weight:600">📋 Lista de Multas</h3>
+                        <div style="display:flex;gap:12px;align-items:center">
+                            <input type="text" placeholder="Buscar multa..." class="form-control" style="width:200px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="buscarMulta">
+                            <select class="form-select" style="width:150px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="filtroEstado">
+                                <option value="">Todos los estados</option>
+                                <option th:each="estado : ${estadosMulta}" th:value="${estado}" th:text="${estado.descripcion}"></option>
+                            </select>
+                            <select class="form-select" style="width:150px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="filtroTipo">
+                                <option value="">Todos los tipos</option>
+                                <option th:each="tipo : ${tiposInfraccion}" th:value="${tipo}" th:text="${tipo.descripcion}"></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="overflow-y:auto;max-height:calc(100vh - 320px)">
+                    <table class="fullscreen-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Contribuyente</th>
+                                    <th>Tipo Infracción</th>
+                                    <th>Monto</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Vencimiento</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="multa : ${multas.content}">
+                                    <td>
+                                        <strong th:text="${multa.numeroMulta}">MUL-202501-0001</strong>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong th:text="${multa.contribuyenteNombre}">Nombre</strong><br>
+                                            <small class="text-muted" th:text="${multa.contribuyenteRif}">RIF</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span th:text="${multa.tipoInfraccionDescripcion}">Tipo</span>
+                                    </td>
+                                    <td>
+                                        <strong th:text="'$' + ${#numbers.formatDecimal(multa.monto, 1, 2)}">$0.00</strong>
+                                        <div th:if="${multa.montoPagado > 0}" class="small text-success">
+                                            Pagado: $<span th:text="${#numbers.formatDecimal(multa.montoPagado, 1, 2)}">0.00</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span th:class="'badge ' + ${multa.estadoBadge}" th:text="${multa.estadoDescripcion}">Estado</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(multa.fechaVencimiento, 'dd/MM/yyyy')}">Fecha</td>
+                                    <td>
+                                        <div style="display:flex;gap:8px">
+                                            <!-- Ver multa - disponible para todos -->
+                                            <button class="btn btn-sm btn-info" 
+                                                    th:onclick="'verMulta(' + ${multa.id} + ')'">
+                                                👁️
+                                            </button>
+                                            
+                                            <!-- Editar multa - solo para usuarios con permisos de escritura -->
+                                            <button th:if="${multa.estado.permiteModificacion()}" 
+                                                    class="btn btn-sm btn-secondary" 
+                                                    sec:authorize="hasAnyAuthority('MULTAS_WRITE','MULTAS_GESTIONAR')"
+                                                    th:onclick="'editarMulta(' + ${multa.id} + ')'">
+                                                ✏️
+                                            </button>
+                                            
+                                            <!-- Registrar pago - solo para usuarios con permisos de escritura -->
+                                            <button th:if="${multa.estado.permitePago()}" 
+                                                    class="btn btn-sm btn-success" 
+                                                    sec:authorize="hasAnyAuthority('MULTAS_WRITE','MULTAS_GESTIONAR')"
+                                                    th:onclick="'pagarMulta(' + ${multa.id} + ')'">
+                                                💰
+                                            </button>
+                                            
+                                            <!-- Anular multa - solo para usuarios con permisos de gestión -->
+                                            <button th:if="${multa.estado.permiteModificacion()}" 
+                                                    class="btn btn-sm btn-danger" 
+                                                    sec:authorize="hasAnyAuthority('MULTAS_GESTIONAR')"
+                                                    th:onclick="'anularMulta(' + ${multa.id} + ')'">
+                                                ❌
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(multas.content)}">
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        No hay multas registradas
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Incluir modales -->
+<div th:replace="fragments/modals :: body"></div>
+
+<script>
+// Variables globales
+const contribuyentes = /*[[${contribuyentes}]]*/ [];
+const tiposInfraccion = /*[[${tiposInfraccion}]]*/ [];
+
+// Función para abrir modal de nueva multa
+function abrirModalNuevaMulta() {
+    const modalTitle = `
+        <div style="display:flex;align-items:center;gap:8px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#dc3545">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+            </svg>
+            Nueva Multa
+        </div>
+    `;
+    
+    const formContent = getMultaForm();
+    openModal(modalTitle, formContent, guardarMulta);
+    
+    // Cargar datos después de abrir el modal
+    setTimeout(() => {
+        cargarContribuyentes();
+    }, 100);
+}
+
+function getMultaForm() {
+    return `
+        <form id="multaForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Contribuyente *</label>
+                        <select id="contribuyenteId" name="contribuyenteId" class="form-control" required>
+                            <option value="">Seleccione un contribuyente</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Tipo de Infracción *</label>
+                        <select id="tipoInfraccion" name="tipoInfraccion" class="form-control" required>
+                            <option value="">Seleccione tipo de infracción</option>
+                            <option value="DECLARACION_TARDIA">Declaración fuera de plazo</option>
+                            <option value="PAGO_TARDIO">Pago fuera de plazo</option>
+                            <option value="EVASION_FISCAL">Evasión fiscal</option>
+                            <option value="DOCUMENTOS_FALSOS">Documentos falsos o alterados</option>
+                            <option value="NO_DECLARACION">No presentación de declaración</option>
+                            <option value="INCUMPLIMIENTO_REQUERIMIENTO">Incumplimiento de requerimiento</option>
+                            <option value="OBSTRUCCION_FISCALIZACION">Obstrucción a la fiscalización</option>
+                            <option value="REGISTRO_INCORRECTO">Registro incorrecto de operaciones</option>
+                            <option value="PATENTE_VENCIDA">Patente comercial vencida</option>
+                            <option value="CONSTRUCCION_SIN_PERMISO">Construcción sin permiso</option>
+                            <option value="USO_SUELO_INDEBIDO">Uso de suelo indebido</option>
+                            <option value="OTROS">Otras infracciones</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label class="form-label">Descripción *</label>
+                <textarea id="descripcion" name="descripcion" class="form-control" required maxlength="500" rows="3" placeholder="Descripción detallada de la infracción"></textarea>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Monto *</label>
+                        <input type="number" id="monto" name="monto" class="form-control" step="0.01" min="0.01" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Fecha Infracción *</label>
+                        <input type="datetime-local" id="fechaInfraccion" name="fechaInfraccion" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Fecha Vencimiento *</label>
+                        <input type="datetime-local" id="fechaVencimiento" name="fechaVencimiento" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label class="form-label">Observaciones</label>
+                <textarea id="observaciones" name="observaciones" class="form-control" maxlength="1000" rows="2" placeholder="Observaciones adicionales (opcional)"></textarea>
+            </div>
+        </form>
+    `;
+}
+
+function cargarContribuyentes() {
+    fetch('/api/contribuyentes')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('contribuyenteId');
+            select.innerHTML = '<option value="">Seleccione un contribuyente</option>';
+            data.forEach(contribuyente => {
+                const option = document.createElement('option');
+                option.value = contribuyente.id;
+                option.textContent = `${contribuyente.razonSocial} (${contribuyente.rif})`;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error cargando contribuyentes:', error);
+            alert('Error al cargar contribuyentes: ' + error.message);
+        });
+}
+
+function guardarMulta() {
+    const form = document.getElementById('multaForm');
+    const formData = new FormData(form);
+    
+    // Deshabilitar botón y mostrar carga
+    const btn = document.querySelector('.modal-submit');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+    
+    // Validar campos requeridos
+    if (!formData.get('contribuyenteId')) {
+        alert('Debe seleccionar un contribuyente');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('tipoInfraccion')) {
+        alert('Debe seleccionar un tipo de infracción');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('descripcion')) {
+        alert('Debe ingresar una descripción');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('monto') || parseFloat(formData.get('monto')) <= 0) {
+        alert('Debe ingresar un monto válido mayor a 0');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('fechaInfraccion')) {
+        alert('Debe seleccionar la fecha de infracción');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('fechaVencimiento')) {
+        alert('Debe seleccionar la fecha de vencimiento');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    
+    const multaData = {
+        contribuyenteId: parseInt(formData.get('contribuyenteId')),
+        tipoInfraccion: formData.get('tipoInfraccion'),
+        descripcion: formData.get('descripcion'),
+        monto: parseFloat(formData.get('monto')),
+        fechaInfraccion: formData.get('fechaInfraccion'),
+        fechaVencimiento: formData.get('fechaVencimiento'),
+        observaciones: formData.get('observaciones') || ''
+    };
+    
+    // Obtener token CSRF
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+    
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+    }
+    
+    fetch('/multas/api', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(multaData)
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            return response.text().then(text => {
+                throw new Error(text || 'Error al crear la multa');
+            });
+        }
+    })
+    .then(data => {
+        closeModal();
+        alert('Multa creada exitosamente con número: ' + data.numeroMulta);
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al guardar la multa: ' + error.message);
+    })
+    .finally(() => {
+        // Restaurar botón
+        const btn = document.querySelector('.modal-submit');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Guardar';
+        }
+    });
+}
+
+function verMulta(id) {
+    // Cargar datos de la multa y mostrar en modal
+    fetch(`/multas/api/${id}`)
+        .then(response => response.json())
+        .then(multa => {
+            const modalTitle = `👁️ Detalle de Multa #${multa.numeroMulta}`;
+            const modalContent = getMultaDetailContent(multa);
+            openModal(modalTitle, modalContent, null); // Sin función de submit
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los detalles de la multa');
+        });
+}
+
+function getMultaDetailContent(multa) {
+    const estadoBadge = multa.estado === 'CONFIRMADO' ? 'badge-success' : 
+                       multa.estado === 'PROCESADO' ? 'badge-warning' : 
+                       multa.estado === 'PENDIENTE' ? 'badge-primary' : 
+                       'badge-danger';
+    
+    return `
+        <div style="display:grid;gap:20px">
+            <!-- Información básica -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Número de Multa</label>
+                    <div style="padding:8px 12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px;font-weight:600;color:#1e293b">
+                        ${multa.numeroMulta}
+                    </div>
+                </div>
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Estado</label>
+                    <div style="padding:8px 12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px">
+                        <span class="badge ${estadoBadge}">${multa.estadoDescripcion}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contribuyente -->
+            <div>
+                <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Contribuyente</label>
+                <div style="padding:12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px">
+                    <div style="font-weight:600;color:#1e293b">${multa.contribuyenteNombre}</div>
+                    <div style="font-size:12px;color:#64748b;margin-top:2px">RIF: ${multa.contribuyenteRif}</div>
+                </div>
+            </div>
+            
+            <!-- Tipo de infracción y descripción -->
+            <div>
+                <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Tipo de Infracción</label>
+                <div style="padding:8px 12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px;color:#1e293b">
+                    ${multa.tipoInfraccionDescripcion}
+                </div>
+            </div>
+            
+            <div>
+                <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Descripción</label>
+                <div style="padding:12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px;color:#1e293b;line-height:1.5">
+                    ${multa.descripcion}
+                </div>
+            </div>
+            
+            <!-- Información financiera -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Monto</label>
+                    <div style="padding:8px 12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px;font-weight:600;color:#dc2626;font-size:16px">
+                        $${multa.monto.toFixed(2)}
+                    </div>
+                </div>
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Pagado</label>
+                    <div style="padding:8px 12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px;font-weight:600;color:#059669;font-size:16px">
+                        $${multa.montoPagado.toFixed(2)}
+                    </div>
+                </div>
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Saldo Pendiente</label>
+                    <div style="padding:8px 12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px;font-weight:600;color:#7c2d12;font-size:16px">
+                        $${multa.saldoPendiente.toFixed(2)}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fechas importantes -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Fecha Infracción</label>
+                    <div style="padding:8px 12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px;color:#1e293b">
+                        ${new Date(multa.fechaInfraccion).toLocaleDateString('es-ES')}
+                    </div>
+                </div>
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Fecha Vencimiento</label>
+                    <div style="padding:8px 12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px;color:#1e293b">
+                        ${new Date(multa.fechaVencimiento).toLocaleDateString('es-ES')}
+                    </div>
+                </div>
+            </div>
+            
+            ${multa.fechaPago ? `
+            <div>
+                <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Fecha de Pago</label>
+                <div style="padding:8px 12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px;color:#059669;font-weight:600">
+                    ${new Date(multa.fechaPago).toLocaleDateString('es-ES')}
+                </div>
+            </div>
+            ` : ''}
+            
+            ${multa.observaciones ? `
+            <div>
+                <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Observaciones</label>
+                <div style="padding:12px;background:var(--input-bg,#f8fafc);border:1px solid var(--border,#e2e8f0);border-radius:6px;color:#1e293b;line-height:1.5">
+                    ${multa.observaciones}
+                </div>
+            </div>
+            ` : ''}
+            
+            <!-- Información de auditoría -->
+            <div style="border-top:1px solid var(--border,#e2e8f0);padding-top:16px;margin-top:8px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px;color:#64748b">
+                    <div>
+                        <strong>Registrado por:</strong> ${multa.usuarioRegistro}<br>
+                        <strong>Fecha registro:</strong> ${new Date(multa.fechaRegistro).toLocaleString('es-ES')}
+                    </div>
+                    ${multa.usuarioModificacion ? `
+                    <div>
+                        <strong>Modificado por:</strong> ${multa.usuarioModificacion}<br>
+                        <strong>Fecha modificación:</strong> ${new Date(multa.fechaModificacion).toLocaleString('es-ES')}
+                    </div>
+                    ` : '<div></div>'}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function editarMulta(id) {
+    // Cargar datos de la multa para edición
+    fetch(`/multas/api/${id}`)
+        .then(response => response.json())
+        .then(multa => {
+            const modalTitle = `✏️ Editar Multa #${multa.numeroMulta}`;
+            const modalContent = getMultaEditForm(multa);
+            openModal(modalTitle, modalContent, () => actualizarMulta(id));
+            
+            // Cargar datos después de abrir el modal
+            setTimeout(() => {
+                cargarContribuyentes();
+                // Preseleccionar valores
+                document.getElementById('contribuyenteId').value = multa.contribuyenteId;
+                document.getElementById('tipoInfraccion').value = multa.tipoInfraccion;
+                document.getElementById('descripcion').value = multa.descripcion;
+                document.getElementById('monto').value = multa.monto;
+                document.getElementById('fechaInfraccion').value = formatDateTimeLocal(multa.fechaInfraccion);
+                document.getElementById('fechaVencimiento').value = formatDateTimeLocal(multa.fechaVencimiento);
+                document.getElementById('observaciones').value = multa.observaciones || '';
+            }, 200);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los datos de la multa');
+        });
+}
+
+function getMultaEditForm(multa) {
+    return `
+        <form id="multaEditForm">
+            <input type="hidden" id="multaId" value="${multa.id}">
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Contribuyente *</label>
+                    <select id="contribuyenteId" name="contribuyenteId" class="form-control" required style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff">
+                        <option value="">Seleccione un contribuyente</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Tipo de Infracción *</label>
+                    <select id="tipoInfraccion" name="tipoInfraccion" class="form-control" required style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff">
+                        <option value="">Seleccione tipo de infracción</option>
+                        <option value="DECLARACION_TARDIA">Declaración fuera de plazo</option>
+                        <option value="PAGO_TARDIO">Pago fuera de plazo</option>
+                        <option value="EVASION_FISCAL">Evasión fiscal</option>
+                        <option value="DOCUMENTOS_FALSOS">Documentos falsos o alterados</option>
+                        <option value="NO_DECLARACION">No presentación de declaración</option>
+                        <option value="INCUMPLIMIENTO_REQUERIMIENTO">Incumplimiento de requerimiento</option>
+                        <option value="OBSTRUCCION_FISCALIZACION">Obstrucción a la fiscalización</option>
+                        <option value="REGISTRO_INCORRECTO">Registro incorrecto de operaciones</option>
+                        <option value="PATENTE_VENCIDA">Patente comercial vencida</option>
+                        <option value="CONSTRUCCION_SIN_PERMISO">Construcción sin permiso</option>
+                        <option value="USO_SUELO_INDEBIDO">Uso de suelo indebido</option>
+                        <option value="OTROS">Otras infracciones</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="margin-bottom:16px">
+                <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Descripción *</label>
+                <textarea id="descripcion" name="descripcion" class="form-control" required maxlength="500" rows="3" 
+                          style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;resize:vertical" 
+                          placeholder="Descripción detallada de la infracción"></textarea>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Monto *</label>
+                    <input type="number" id="monto" name="monto" class="form-control" step="0.01" min="0.01" required 
+                           style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff">
+                </div>
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Fecha Infracción *</label>
+                    <input type="datetime-local" id="fechaInfraccion" name="fechaInfraccion" class="form-control" required 
+                           style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff">
+                </div>
+                <div>
+                    <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Fecha Vencimiento *</label>
+                    <input type="datetime-local" id="fechaVencimiento" name="fechaVencimiento" class="form-control" required 
+                           style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff">
+                </div>
+            </div>
+            
+            <div style="margin-bottom:16px">
+                <label style="font-weight:600;color:#64748b;font-size:12px;text-transform:uppercase;margin-bottom:4px;display:block">Observaciones</label>
+                <textarea id="observaciones" name="observaciones" class="form-control" maxlength="1000" rows="2" 
+                          style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;resize:vertical" 
+                          placeholder="Observaciones adicionales (opcional)"></textarea>
+            </div>
+        </form>
+    `;
+}
+
+function actualizarMulta(id) {
+    const form = document.getElementById('multaEditForm');
+    const formData = new FormData(form);
+    
+    // Deshabilitar botón y mostrar carga
+    const btn = document.querySelector('.modal-submit');
+    btn.disabled = true;
+    btn.textContent = 'Actualizando...';
+    
+    // Validar campos requeridos
+    if (!formData.get('contribuyenteId')) {
+        alert('Debe seleccionar un contribuyente');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('tipoInfraccion')) {
+        alert('Debe seleccionar un tipo de infracción');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('descripcion')) {
+        alert('Debe ingresar una descripción');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('monto') || parseFloat(formData.get('monto')) <= 0) {
+        alert('Debe ingresar un monto válido mayor a 0');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('fechaInfraccion')) {
+        alert('Debe seleccionar la fecha de infracción');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('fechaVencimiento')) {
+        alert('Debe seleccionar la fecha de vencimiento');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    
+    const multaData = {
+        contribuyenteId: parseInt(formData.get('contribuyenteId')),
+        tipoInfraccion: formData.get('tipoInfraccion'),
+        descripcion: formData.get('descripcion'),
+        monto: parseFloat(formData.get('monto')),
+        fechaInfraccion: formData.get('fechaInfraccion'),
+        fechaVencimiento: formData.get('fechaVencimiento'),
+        observaciones: formData.get('observaciones') || ''
+    };
+    
+    // Obtener token CSRF
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+    
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+    }
+    
+    fetch(`/multas/api/${id}`, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify(multaData)
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            return response.text().then(text => {
+                throw new Error(text || 'Error al actualizar la multa');
+            });
+        }
+    })
+    .then(data => {
+        closeModal();
+        alert('Multa actualizada exitosamente');
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar la multa: ' + error.message);
+    })
+    .finally(() => {
+        // Restaurar botón
+        const btn = document.querySelector('.modal-submit');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Guardar';
+        }
+    });
+}
+
+// Función auxiliar para formatear fecha para datetime-local
+function formatDateTimeLocal(dateString) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function pagarMulta(id) {
+    // Redirigir al módulo de Pagos con la multa preseleccionada
+    window.location.href = `/pagos?multaId=${id}&action=nuevo`;
+}
+
+function anularMulta(id) {
+    const motivo = prompt('Ingrese el motivo de anulación:');
+    if (motivo) {
+        openConfirmModal('¿Está seguro de anular esta multa?', () => {
+            // Implementar lógica de anulación
+            alert('Funcionalidad de anulación en desarrollo');
+        });
+    }
+}
+
+function exportarMultas() {
+    alert('Funcionalidad de exportación en desarrollo');
+}
+
+function aplicarFiltros() {
+    const estado = document.getElementById('filtroEstado').value;
+    const tipo = document.getElementById('filtroTipo').value;
+    const busqueda = document.getElementById('buscarMulta').value;
+    
+    let url = '/multas?';
+    if (estado) url += 'estado=' + estado + '&';
+    if (tipo) url += 'tipo=' + tipo + '&';
+    if (busqueda) url += 'buscar=' + busqueda + '&';
+    
+    window.location.href = url;
+}
+</script>
+
+<script th:src="@{/js/theme.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

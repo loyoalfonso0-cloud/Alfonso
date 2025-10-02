@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title th:text="${pageTitle} + ' - Sistema Tributario'">Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons-professional.css}">
+    <script th:src="@{/js/theme.js}"></script>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header -->
+        <div class="fullscreen-header">
+            <h2 style="margin:0;color:#e2e8f0;font-size:24px;font-weight:700" th:text="${pageIcon} + ' ' + ${pageTitle}">📊 Dashboard</h2>
+            <div style="display:flex;align-items:center;gap:16px" th:fragment="header-buttons">
+                <!-- Los botones específicos de cada página se insertan aquí -->
+            </div>
+        </div>
+        
+        <!-- Contenido con scroll -->
+        <div class="fullscreen-content" th:fragment="page-content">
+            <!-- El contenido específico de cada página se inserta aquí -->
+        </div>
+    </main>
+</div>
+
+<!-- Incluir modales -->
+<div th:replace="fragments/modals :: body"></div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Scripts específicos de cada página -->
+<div th:fragment="page-scripts">
+    <!-- Los scripts específicos se insertan aquí -->
+</div>
+
+</body>
+</html>

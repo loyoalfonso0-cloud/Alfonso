@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta http-equiv="Permissions-Policy" content="geolocation=()"/>
+    <title>Gestión de Contribuyentes - Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons-professional.css}">
+    <link rel="stylesheet" th:href="@{/css/icons.css}">
+    <script th:src="@{/js/theme.js}"></script>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header -->
+        <div class="fullscreen-header">
+            <h2 style="margin:0;color:#e2e8f0;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="page-title-icon">
+                    <path d="M3 21h18"/>
+                    <path d="M5 21V7l8-4v18"/>
+                    <path d="M19 21V11l-6-4"/>
+                </svg>
+                Gestión de Contribuyentes
+            </h2>
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="btn-modern btn-modern-success" sec:authorize="hasAnyAuthority('CONTRIBUYENTES_WRITE','CONTRIBUYENTES_GESTIONAR')" onclick="openModal('Nuevo Contribuyente', getContribuyenteForm(), submitContribuyente)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nuevo Contribuyente
+                </button>
+                <button class="btn-modern btn-modern-export" onclick="exportarContribuyentes()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contenido con scroll -->
+        <div class="fullscreen-content">
+            <!-- Estadísticas rápidas -->
+            <div class="fullscreen-stats">
+                <div class="stat-card" style="border-left:4px solid #8b5cf6">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Total Contribuyentes</div>
+                    <div style="font-size:32px;font-weight:700;color:#8b5cf6" th:text="${estadisticas.total}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #10b981">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Activos</div>
+                    <div style="font-size:32px;font-weight:700;color:#10b981" th:text="${estadisticas.activos}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #f59e0b">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Este Mes</div>
+                    <div style="font-size:32px;font-weight:700;color:#f59e0b" th:text="${estadisticas.esteMes}">0</div>
+                </div>
+            </div>
+
+            <!-- Tabla de contribuyentes -->
+            <div class="fullscreen-table-container">
+                <div style="padding:20px;border-bottom:1px solid rgba(148, 163, 184, 0.2)">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <h3 style="margin:0;color:#e2e8f0;font-size:18px;font-weight:600">📋 Lista de Contribuyentes</h3>
+                        <div style="display:flex;gap:12px;align-items:center">
+                            <input type="text" placeholder="Buscar contribuyente..." class="form-control" style="width:200px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="searchInput">
+                            <select class="form-select" style="width:150px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="filterTipo">
+                                <option value="">Todos los tipos</option>
+                                <option value="PERSONA_NATURAL">Persona Natural</option>
+                                <option value="PERSONA_JURIDICA">Persona Jurídica</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="overflow-y:auto;max-height:calc(100vh - 320px)">
+                    <table class="fullscreen-table">
+                        <thead>
+                            <tr>
+                                <th>Razón Social</th>
+                                <th>RIF</th>
+                                <th>Tipo</th>
+                                <th>Email</th>
+                                <th>Teléfono</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contribuyentesTable">
+                            <tr th:each="c: ${contribuyentes}">
+                                <td>
+                                    <div style="font-weight:500" th:text="${c.razonSocial}"></div>
+                                    <div class="text-muted" style="font-size:12px" th:text="${c.direccion}"></div>
+                                </td>
+                                <td th:text="${c.rif}"></td>
+                                <td>
+                                    <span class="badge badge-primary" th:text="${c.tipoContribuyente}"></span>
+                                </td>
+                                <td th:text="${c.email}"></td>
+                                <td th:text="${c.telefono}"></td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${c.activo} ? 'badge-success' : 'badge-danger'"
+                                          th:text="${c.activo} ? 'Activo' : 'Inactivo'"></span>
+                                </td>
+                                <td>
+                                    <div style="display:flex;gap:8px">
+                                        <!-- Ver contribuyente - disponible para todos -->
+                                        <button class="btn btn-sm btn-info" 
+                                                th:onclick="'verContribuyente(' + ${c.id} + ')'">
+                                            👁️
+                                        </button>
+                                        
+                                        <!-- Editar contribuyente - solo para usuarios con permisos de escritura -->
+                                        <button class="btn btn-sm btn-secondary" 
+                                                sec:authorize="hasAnyAuthority('CONTRIBUYENTES_WRITE','CONTRIBUYENTES_GESTIONAR')"
+                                                th:onclick="'editarContribuyente(' + ${c.id} + ')'">
+                                            ✏️
+                                        </button>
+                                        
+                                        <!-- Cambiar estado - solo para usuarios con permisos de escritura -->
+                                        <button class="btn btn-sm btn-success" 
+                                                sec:authorize="hasAnyAuthority('CONTRIBUYENTES_WRITE','CONTRIBUYENTES_GESTIONAR')"
+                                                th:onclick="'cambiarEstado(' + ${c.id} + ')'">
+                                            🔄
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(contribuyentes)}">
+                                <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
+                                    👥 No hay contribuyentes registrados
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Incluir modales -->
+<div th:replace="fragments/modals :: body"></div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    
+    // Función para obtener formulario de nuevo contribuyente
+    function getContribuyenteForm(contribuyente = null) {
+        const isEdit = contribuyente !== null;
+        
+        return `
+            <form id="contribuyenteForm">
+                ${isEdit ? `<input type="hidden" name="id" value="${contribuyente.id}">` : ''}
+                <div class="form-group">
+                    <label class="form-label">Tipo de Contribuyente *</label>
+                    <select class="form-control" name="tipoContribuyente" required onchange="toggleFormFields(this.value)">
+                        <option value="">Seleccionar tipo...</option>
+                        <option value="PERSONA_NATURAL" ${isEdit && contribuyente.tipoContribuyente === 'PERSONA_NATURAL' ? 'selected' : ''}>
+                            Persona Natural
+                        </option>
+                        <option value="PERSONA_JURIDICA" ${isEdit && contribuyente.tipoContribuyente === 'PERSONA_JURIDICA' ? 'selected' : ''}>
+                            Persona Jurídica
+                        </option>
+                    </select>
+                </div>
+                
+                <!-- Campos para Persona Natural -->
+                <div id="personaNaturalFields" class="grid grid-cols-2" style="gap:16px;display:none">
+                    <div class="form-group">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" name="nombre" 
+                               value="${isEdit ? contribuyente.nombre || '' : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Apellido *</label>
+                        <input type="text" class="form-control" name="apellido" 
+                               value="${isEdit ? contribuyente.apellido || '' : ''}">
+                    </div>
+                </div>
+                
+                <!-- Campos para Persona Jurídica -->
+                <div id="personaJuridicaFields" class="form-group" style="display:none">
+                    <label class="form-label">Razón Social *</label>
+                    <input type="text" class="form-control" name="razonSocial" 
+                           value="${isEdit ? contribuyente.razonSocial : ''}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">RIF *</label>
+                    <input type="text" class="form-control" name="rif" 
+                           value="${isEdit ? contribuyente.rif : ''}" 
+                           placeholder="Ej: V-12345678-9" maxlength="20" required>
+                    <small class="text-muted">Ingrese el RIF del contribuyente</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Dirección *</label>
+                    <textarea class="form-control" name="direccion" rows="2" required>${isEdit ? contribuyente.direccion : ''}</textarea>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" name="email" 
+                               value="${isEdit ? contribuyente.email : ''}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control" name="telefono" 
+                               value="${isEdit ? contribuyente.telefono || '' : ''}">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Representante Legal</label>
+                    <input type="text" class="form-control" name="representanteLegal" 
+                           value="${isEdit ? contribuyente.representanteLegal || '' : ''}">
+                </div>
+            </form>
+        `;
+    }
+    
+    // Función para enviar nuevo/editar contribuyente
+    function submitContribuyente() {
+        const form = document.getElementById('contribuyenteForm');
+        
+        // Validaciones del lado del cliente
+        const rif = form.querySelector('input[name="rif"]').value.trim();
+        const razonSocial = form.querySelector('input[name="razonSocial"]').value.trim();
+        const email = form.querySelector('input[name="email"]').value.trim();
+        const tipoContribuyente = form.querySelector('select[name="tipoContribuyente"]').value;
+        
+        // Validar RIF básico (solo que no esté vacío)
+        if (!rif) {
+            showToast('El RIF es obligatorio', 'error');
+            return;
+        }
+        
+        // Validar según el tipo de contribuyente
+        if (tipoContribuyente === 'PERSONA_NATURAL') {
+            const nombre = form.querySelector('input[name="nombre"]').value.trim();
+            const apellido = form.querySelector('input[name="apellido"]').value.trim();
+            
+            if (!nombre) {
+                showToast('El nombre es obligatorio para Persona Natural', 'error');
+                return;
+            }
+            if (!apellido) {
+                showToast('El apellido es obligatorio para Persona Natural', 'error');
+                return;
+            }
+        } else if (tipoContribuyente === 'PERSONA_JURIDICA') {
+            if (!razonSocial) {
+                showToast('La razón social es obligatoria para Persona Jurídica', 'error');
+                return;
+            }
+        }
+        
+        // Validar email
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            showToast('Debe ingresar un email válido', 'error');
+            return;
+        }
+        
+        // Validar tipo de contribuyente
+        if (!tipoContribuyente) {
+            showToast('Debe seleccionar un tipo de contribuyente', 'error');
+            return;
+        }
+        
+        const formData = new FormData(form);
+        
+        // Agregar token CSRF
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        formData.append('_csrf', csrfToken);
+        
+        const isEdit = formData.get('id');
+        const url = isEdit ? `/tributario/contribuyentes/${isEdit}` : '/tributario/contribuyentes';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        fetch(url, {
+            method: method,
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                showToast(isEdit ? 'Contribuyente actualizado exitosamente' : 'Contribuyente creado exitosamente', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || 'Error en la operación');
+                });
+            }
+        })
+        .catch(error => {
+            showToast('Error: ' + error.message, 'error');
+        });
+    }
+    
+    // Función para ver detalles del contribuyente
+    function verContribuyente(id) {
+        fetch(`/tributario/contribuyentes/${id}`)
+        .then(response => response.json())
+        .then(contribuyente => {
+            const detalles = `
+                <div style="display:grid;gap:16px">
+                    <div class="grid grid-cols-2" style="gap:16px">
+                        <div>
+                            <strong>Razón Social:</strong><br>
+                            <span>${contribuyente.razonSocial}</span>
+                        </div>
+                        <div>
+                            <strong>RIF:</strong><br>
+                            <span>${contribuyente.rif}</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <strong>Tipo:</strong><br>
+                        <span class="badge badge-primary">${contribuyente.tipoContribuyente}</span>
+                    </div>
+                    
+                    <div>
+                        <strong>Dirección:</strong><br>
+                        <span>${contribuyente.direccion}</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2" style="gap:16px">
+                        <div>
+                            <strong>Email:</strong><br>
+                            <span>${contribuyente.email}</span>
+                        </div>
+                        <div>
+                            <strong>Teléfono:</strong><br>
+                            <span>${contribuyente.telefono || 'No especificado'}</span>
+                        </div>
+                    </div>
+                    
+                    ${contribuyente.representanteLegal ? `
+                        <div>
+                            <strong>Representante Legal:</strong><br>
+                            <span>${contribuyente.representanteLegal}</span>
+                        </div>
+                    ` : ''}
+                    
+                    <div>
+                        <strong>Estado:</strong><br>
+                        <span class="badge ${contribuyente.activo ? 'badge-success' : 'badge-danger'}">
+                            ${contribuyente.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            openModal('👁️ Detalles del Contribuyente', detalles, null);
+            // Ocultar botón de guardar para vista de solo lectura
+            document.querySelector('.modal-submit').style.display = 'none';
+        })
+        .catch(error => {
+            showToast('Error al cargar los detalles', 'error');
+        });
+    }
+    
+    // Función para editar contribuyente
+    function editarContribuyente(id) {
+        fetch(`/tributario/contribuyentes/${id}`)
+        .then(response => response.json())
+        .then(contribuyente => {
+            openModal('✏️ Editar Contribuyente', getContribuyenteForm(contribuyente), submitContribuyente);
+        })
+        .catch(error => {
+            showToast('Error al cargar los datos del contribuyente', 'error');
+        });
+    }
+        // Función para cambiar estado del contribuyente
+    function cambiarEstado(id) {
+        console.log('cambiarEstado llamada con ID:', id);
+        fetch(`/tributario/contribuyentes/${id}`)
+        .then(response => response.json())
+        .then(contribuyente => {
+            const nuevoEstado = !contribuyente.activo;
+            const mensaje = nuevoEstado ? 'activar' : 'desactivar';
+            const accion = nuevoEstado ? 'activación' : 'desactivación';
+            const icono = nuevoEstado ? '✅' : '⚠️';
+            
+            openConfirmModal(
+                `${icono} ¿Está seguro de ${mensaje} este contribuyente? Esta ${accion} ${nuevoEstado ? 'habilitará' : 'deshabilitará'} al contribuyente "${contribuyente.razonSocial}" en el sistema.`,
+                function() {
+                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                    
+                    console.log('Enviando PATCH request:', {
+                        url: `/tributario/contribuyentes/${id}/estado`,
+                        body: { activo: nuevoEstado },
+                        headers: { [csrfHeader]: csrfToken }
+                    });
+                    
+                    fetch(`/tributario/contribuyentes/${id}/estado`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            [csrfHeader]: csrfToken
+                        },
+                        body: JSON.stringify({ activo: nuevoEstado })
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        console.log('Response ok:', response.ok);
+                        
+                        if (response.ok) {
+                            showToast(`Contribuyente ${nuevoEstado ? 'activado' : 'desactivado'} exitosamente`, 'success');
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            response.text().then(errorText => {
+                                console.error('Error response:', errorText);
+                                showToast(`Error al cambiar el estado: ${errorText}`, 'error');
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                        showToast('Error de conexión: ' + error.message, 'error');
+                    });
+                }
+            );
+        })
+        .catch(error => {
+            showToast('Error al obtener datos del contribuyente', 'error');
+        });
+    }
+    
+    
+    // Función para exportar contribuyentes
+    function exportarContribuyentes() {
+        window.open('/tributario/contribuyentes/export', '_blank');
+        showToast('Iniciando descarga...', 'success');
+    }
+    
+    // Función para mostrar notificaciones toast
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+        toast.innerHTML = `
+            <span style="font-size:16px">${icon}</span>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 4000);
+    }
+    
+    // Filtros y búsqueda
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const filterTipo = document.getElementById('filterTipo');
+        const table = document.getElementById('contribuyentesTable');
+        
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const tipoFilter = filterTipo.value;
+            const rows = table.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                if (row.cells.length === 1) return; // Skip empty row
+                
+                const razonSocial = row.cells[0].textContent.toLowerCase();
+                const rif = row.cells[1].textContent.toLowerCase();
+                const tipo = row.cells[2].textContent;
+                
+                const matchesSearch = razonSocial.includes(searchTerm) || rif.includes(searchTerm);
+                const matchesTipo = !tipoFilter || tipo.toUpperCase().includes(tipoFilter);
+                
+                row.style.display = matchesSearch && matchesTipo ? '' : 'none';
+            });
+        }
+        
+        searchInput.addEventListener('input', filterTable);
+        filterTipo.addEventListener('change', filterTable);
+    });
+    
+    
+    
+    // Función para mostrar/ocultar campos según el tipo de contribuyente
+    function toggleFormFields(tipoContribuyente) {
+        const personaNaturalFields = document.getElementById('personaNaturalFields');
+        const personaJuridicaFields = document.getElementById('personaJuridicaFields');
+        
+        if (tipoContribuyente === 'PERSONA_NATURAL') {
+            personaNaturalFields.style.display = 'grid';
+            personaJuridicaFields.style.display = 'none';
+            
+            // Hacer campos obligatorios
+            personaNaturalFields.querySelectorAll('input').forEach(input => {
+                input.required = true;
+            });
+            personaJuridicaFields.querySelectorAll('input').forEach(input => {
+                input.required = false;
+            });
+        } else if (tipoContribuyente === 'PERSONA_JURIDICA') {
+            personaNaturalFields.style.display = 'none';
+            personaJuridicaFields.style.display = 'block';
+            
+            // Hacer campos obligatorios
+            personaJuridicaFields.querySelectorAll('input').forEach(input => {
+                input.required = true;
+            });
+            personaNaturalFields.querySelectorAll('input').forEach(input => {
+                input.required = false;
+            });
+        } else {
+            personaNaturalFields.style.display = 'none';
+            personaJuridicaFields.style.display = 'none';
+        }
+    }
+    
+    /*]]>*/
+</script>
+</body>
+</html>

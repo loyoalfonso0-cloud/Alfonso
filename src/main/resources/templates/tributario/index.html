@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Declaraciones - Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons-professional.css}">
+    <link rel="stylesheet" th:href="@{/css/icons.css}">
+    <script th:src="@{/js/theme.js}"></script>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header -->
+        <div class="fullscreen-header">
+            <h2 style="margin:0;color:#e2e8f0;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="page-title-icon">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14,2 14,8 20,8"/>
+                    <line x1="9" y1="15" x2="15" y2="15"/>
+                    <line x1="9" y1="18" x2="13" y2="18"/>
+                </svg>
+                Gestión de Declaraciones
+            </h2>
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="btn-modern btn-modern-success" sec:authorize="hasAnyAuthority('DECLARACIONES_WRITE','DECLARACIONES_GESTIONAR')" onclick="abrirModalNuevaDeclaracion()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nueva Declaración
+                </button>
+                <button class="btn-modern btn-modern-export" onclick="exportarDeclaraciones()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contenido con scroll -->
+        <div class="fullscreen-content">
+            <!-- Estadísticas rápidas -->
+            <div class="fullscreen-stats">
+                <div class="stat-card" style="border-left:4px solid #8b5cf6">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Total Declaraciones</div>
+                    <div style="font-size:32px;font-weight:700;color:#8b5cf6" th:text="${#lists.size(declaraciones)}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #10b981">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Presentadas</div>
+                    <div style="font-size:32px;font-weight:700;color:#10b981">45</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #f59e0b">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Pendientes</div>
+                    <div style="font-size:32px;font-weight:700;color:#f59e0b">8</div>
+                </div>
+            </div>
+
+            <!-- Tabla de declaraciones -->
+            <div class="fullscreen-table-container">
+                <div style="padding:20px;border-bottom:1px solid rgba(148, 163, 184, 0.2)">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <h3 style="margin:0;color:#e2e8f0;font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#10b981">
+                                <path d="M9 11H4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h5m0-6v6m0-6h11a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H9m0-6V9a2 2 0 0 1 2-2h3"/>
+                            </svg>
+                            Lista de Declaraciones
+                        </h3>
+                        <div style="display:flex;gap:12px;align-items:center">
+                            <input type="text" placeholder="Buscar declaración..." class="form-control" style="width:200px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="searchInput">
+                            <select class="form-select" style="width:150px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="filterEstado">
+                                <option value="">Todos los estados</option>
+                                <option value="PENDIENTE">Pendiente</option>
+                                <option value="PRESENTADA">Presentada</option>
+                                <option value="PAGADA">Pagada</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="overflow-y:auto;max-height:calc(100vh - 320px)">
+                    <table class="fullscreen-table">
+                        <thead>
+                            <tr>
+                                <th>Contribuyente</th>
+                                <th>Impuesto</th>
+                                <th>Período</th>
+                                <th>Base Imponible</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="declaracionesTable">
+                            <tr th:each="d: ${declaraciones}">
+                                <td>
+                                    <div style="font-weight:500" th:text="${d.contribuyente.razonSocial}"></div>
+                                    <div class="text-muted" style="font-size:12px" th:text="${d.contribuyente.rif}"></div>
+                                </td>
+                                <td th:text="${d.impuesto.nombre}"></td>
+                                <td th:text="${d.periodo}"></td>
+                                <td th:text="${#numbers.formatCurrency(d.baseImponible)}"></td>
+                                <td th:text="${#numbers.formatCurrency(d.monto)}"></td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${d.estado == 'PAGADA'} ? 'badge-success' : (${d.estado == 'PRESENTADA'} ? 'badge-primary' : 'badge-warning')"
+                                          th:text="${d.estado}"></span>
+                                </td>
+                                <td>
+                                    <div style="display:flex;gap:8px">
+                                        <!-- Ver declaración - disponible para todos -->
+                                        <button class="btn btn-sm btn-info" 
+                                                th:onclick="'verDeclaracion(' + ${d.id} + ')'"
+                                                title="Ver detalles">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                <circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        </button>
+                                        
+                                        <!-- Editar declaración - solo para usuarios con permisos de escritura -->
+                                        <button class="btn btn-sm btn-secondary" 
+                                                sec:authorize="hasAnyAuthority('DECLARACIONES_WRITE','DECLARACIONES_GESTIONAR')"
+                                                th:onclick="'editarDeclaracion(' + ${d.id} + ')'"
+                                                title="Editar">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                            </svg>
+                                        </button>
+                                        
+                                        <!-- Cambiar estado - solo para usuarios con permisos de escritura -->
+                                        <button class="btn btn-sm btn-primary" 
+                                                sec:authorize="hasAnyAuthority('DECLARACIONES_WRITE','DECLARACIONES_GESTIONAR')"
+                                                th:onclick="'cambiarEstadoDeclaracion(' + ${d.id} + ')'"
+                                                title="Cambiar estado">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="23,4 23,10 17,10"/>
+                                                <polyline points="1,20 1,14 7,14"/>
+                                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                                            </svg>
+                                        </button>
+                                        
+                                        <!-- Registrar pago - solo para usuarios con permisos de escritura -->
+                                        <button class="btn btn-sm btn-success" 
+                                                sec:authorize="hasAnyAuthority('DECLARACIONES_WRITE','DECLARACIONES_GESTIONAR')"
+                                                th:onclick="'registrarPago(' + ${d.id} + ')'"
+                                                title="Registrar pago">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                                                <line x1="1" y1="10" x2="23" y2="10"/>
+                                            </svg>
+                                        </button>
+                                        
+                                        <!-- Eliminar declaración - solo para usuarios con permisos de eliminación -->
+                                        <button class="btn btn-sm btn-danger" 
+                                                sec:authorize="hasAnyAuthority('DECLARACIONES_DELETE','DECLARACIONES_GESTIONAR')"
+                                                th:onclick="'eliminarDeclaracion(' + ${d.id} + ')'"
+                                                title="Eliminar">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="3,6 5,6 21,6"/>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                <line x1="10" y1="11" x2="10" y2="17"/>
+                                                <line x1="14" y1="11" x2="14" y2="17"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(declaraciones)}">
+                                <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
+                                    <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#94a3b8">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14,2 14,8 20,8"/>
+                                            <line x1="9" y1="15" x2="15" y2="15"/>
+                                            <line x1="9" y1="18" x2="13" y2="18"/>
+                                        </svg>
+                                        No hay declaraciones registradas
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Incluir modales -->
+    <div th:replace="fragments/modals :: body"></div>
+    
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="brand">Sistema Tributario Empresarial v2.0</div>
+    <div class="splash"></div><div class="splash2"></div><div class="splash3"></div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    
+    // Datos para los formularios
+    const contribuyentes = /*[[${contribuyentes}]]*/ [];
+    const impuestos = /*[[${impuestos}]]*/ [];
+    
+    // Función para abrir modal de nueva declaración
+    function abrirModalNuevaDeclaracion() {
+        const formContent = getDeclaracionForm();
+        const modalTitle = `
+            <div style="display:flex;align-items:center;gap:8px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#8b5cf6">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14,2 14,8 20,8"/>
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Nueva Declaración
+            </div>
+        `;
+        openModal(modalTitle, formContent, submitDeclaracion);
+    }
+    
+    // Función para obtener formulario de nueva declaración
+    function getDeclaracionForm() {
+        let contribuyentesOptions = '<option value="">Seleccionar contribuyente...</option>';
+        contribuyentes.forEach(c => {
+            contribuyentesOptions += `<option value="${c.id}">${c.razonSocial} - ${c.rif}</option>`;
+        });
+        
+        let impuestosOptions = '<option value="">Seleccionar impuesto...</option>';
+        impuestos.forEach(i => {
+            impuestosOptions += `<option value="${i.id}">${i.nombre}</option>`;
+        });
+        
+        return `
+            <form id="declaracionForm">
+                <div class="form-group">
+                    <label class="form-label">Contribuyente</label>
+                    <select class="form-control" name="contribuyenteId" required>
+                        ${contribuyentesOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Impuesto</label>
+                    <select class="form-control" name="impuestoId" required>
+                        ${impuestosOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Período</label>
+                    <input type="month" class="form-control" name="periodo" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Base Imponible</label>
+                    <input type="number" step="0.01" class="form-control" name="baseImponible" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Monto del Impuesto</label>
+                    <input type="number" step="0.01" class="form-control" name="monto" required>
+                </div>
+            </form>
+        `;
+    }
+    
+    // Función para enviar nueva declaración o editar existente
+    function submitDeclaracion(isEdit = false, id = null) {
+        const formId = isEdit ? 'editDeclaracionForm' : 'declaracionForm';
+        const form = document.getElementById(formId);
+        const formData = new FormData(form);
+        
+        // Obtener token CSRF
+        const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '[[${_csrf.token}]]';
+        const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+        
+        const url = isEdit ? `/tributario/declaraciones/${id}` : '/tributario/declaraciones';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                [header]: token,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams(formData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`Error ${response.status}: ${text}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            showToast(isEdit ? 'Declaración actualizada exitosamente' : 'Declaración creada exitosamente', 'success');
+            closeModal();
+            setTimeout(() => location.reload(), 1500);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error al guardar la declaración: ' + error.message, 'error');
+        });
+    }
+    
+    // Función para editar declaración
+    function editarDeclaracion(id) {
+        // Obtener token CSRF
+        const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '[[${_csrf.token}]]';
+        const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+        
+        // Obtener datos de la declaración
+        fetch(`/tributario/declaraciones/${id}`, {
+            method: 'GET',
+            headers: {
+                [header]: token
+            }
+        })
+        .then(response => response.json())
+        .then(declaracion => {
+            let contribuyentesOptions = '';
+            contribuyentes.forEach(c => {
+                const selected = c.id === declaracion.contribuyente.id ? 'selected' : '';
+                contribuyentesOptions += `<option value="${c.id}" ${selected}>${c.razonSocial} - ${c.rif}</option>`;
+            });
+            
+            let impuestosOptions = '';
+            impuestos.forEach(i => {
+                const selected = i.id === declaracion.impuesto.id ? 'selected' : '';
+                impuestosOptions += `<option value="${i.id}" ${selected}>${i.nombre}</option>`;
+            });
+            
+            const formEdit = `
+                <form id="editDeclaracionForm">
+                    <input type="hidden" name="id" value="${declaracion.id}">
+                    <div class="form-group">
+                        <label class="form-label">Contribuyente *</label>
+                        <select class="form-control" name="contribuyenteId" required>
+                            ${contribuyentesOptions}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Impuesto *</label>
+                        <select class="form-control" name="impuestoId" required>
+                            ${impuestosOptions}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Período *</label>
+                        <input type="month" class="form-control" name="periodo" value="${declaracion.periodo}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Base Imponible *</label>
+                        <input type="number" step="0.01" class="form-control" name="baseImponible" value="${declaracion.baseImponible}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monto del Impuesto *</label>
+                        <input type="number" step="0.01" class="form-control" name="monto" value="${declaracion.monto}" required>
+                    </div>
+                </form>
+            `;
+            
+            const editModalTitle = `
+                <div style="display:flex;align-items:center;gap:8px">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#6b7280">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Editar Declaración
+                </div>
+            `;
+            
+            openModal(editModalTitle, formEdit, function() {
+                submitDeclaracion(true, id);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error al cargar los datos de la declaración', 'error');
+        });
+    }
+    
+    // Función para ver detalles de declaración
+    function verDeclaracion(id) {
+        const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '[[${_csrf.token}]]';
+        const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+        
+        fetch(`/tributario/declaraciones/${id}`, {
+            method: 'GET',
+            headers: {
+                [header]: token
+            }
+        })
+        .then(response => response.json())
+        .then(declaracion => {
+            const detalleHtml = `
+                <div style="display:grid;gap:16px">
+                    <div class="grid grid-cols-2" style="gap:16px">
+                        <div>
+                            <strong>Contribuyente:</strong><br>
+                            <span style="font-size:16px;font-weight:600">${declaracion.contribuyente.razonSocial || declaracion.contribuyente.nombres + ' ' + declaracion.contribuyente.apellidos}</span><br>
+                            <small style="color:#6c757d">${declaracion.contribuyente.tipoDocumento}: ${declaracion.contribuyente.documento}</small>
+                        </div>
+                        <div>
+                            <strong>Estado:</strong><br>
+                            <span class="badge ${getEstadoBadgeClass(declaracion.estado)}">${declaracion.estado}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2" style="gap:16px">
+                        <div>
+                            <strong>Impuesto:</strong><br>
+                            <span style="font-size:16px;font-weight:600">${declaracion.impuesto.nombre}</span><br>
+                            <small style="color:#6c757d">Tasa: ${declaracion.impuesto.tasa}%</small>
+                        </div>
+                        <div>
+                            <strong>Período:</strong><br>
+                            <span class="badge badge-info" style="font-size:14px">${declaracion.periodo}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2" style="gap:16px">
+                        <div>
+                            <strong>Base Imponible:</strong><br>
+                            <span style="font-size:18px;font-weight:600;color:#28a745">$${declaracion.baseImponible.toLocaleString('es-ES', {minimumFractionDigits: 2})}</span>
+                        </div>
+                        <div>
+                            <strong>Monto a Pagar:</strong><br>
+                            <span style="font-size:20px;font-weight:700;color:#007bff">$${declaracion.monto.toLocaleString('es-ES', {minimumFractionDigits: 2})}</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <strong>Fecha de Creación:</strong><br>
+                        <span>${new Date(declaracion.creadoEn).toLocaleString('es-ES')}</span>
+                    </div>
+                    
+                    ${declaracion.pagos && declaracion.pagos.length > 0 ? `
+                    <div>
+                        <strong>Historial de Pagos:</strong><br>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+                            ${declaracion.pagos.map(pago => 
+                                `<div style="background:#f8f9fa;padding:8px;border-radius:6px;border-left:4px solid #28a745;margin-bottom:8px;width:100%">
+                                    <div style="display:flex;justify-content:space-between;align-items:center">
+                                        <div>
+                                            <strong>$${pago.monto.toLocaleString('es-ES', {minimumFractionDigits: 2})}</strong>
+                                            <span class="badge badge-secondary ml-2">${pago.metodo}</span>
+                                        </div>
+                                        <div style="text-align:right">
+                                            <div>${new Date(pago.fechaPago).toLocaleDateString('es-ES')}</div>
+                                            <small style="color:#6c757d">${pago.referencia || 'Sin referencia'}</small>
+                                        </div>
+                                    </div>
+                                </div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    ` : `
+                    <div>
+                        <strong>Pagos:</strong><br>
+                        <span style="color:#6c757d;font-style:italic">No hay pagos registrados para esta declaración</span>
+                    </div>
+                    `}
+                </div>
+            `;
+            
+            const viewModalTitle = `
+                <div style="display:flex;align-items:center;gap:8px">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#3b82f6">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Ver Declaración
+                </div>
+            `;
+            
+            openModal(viewModalTitle, detalleHtml);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error al cargar los detalles de la declaración', 'error');
+        });
+    }
+    
+    // Función auxiliar para obtener la clase del badge según el estado
+    function getEstadoBadgeClass(estado) {
+        switch(estado) {
+            case 'PENDIENTE': return 'badge-warning';
+            case 'PRESENTADA': return 'badge-info';
+            case 'APROBADA': return 'badge-success';
+            case 'RECHAZADA': return 'badge-danger';
+            case 'PAGADA': return 'badge-success';
+            default: return 'badge-secondary';
+        }
+    }
+    
+    // Función para registrar pago
+    function registrarPago(id) {
+        // Obtener datos de la declaración para mostrar el monto
+        const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '[[${_csrf.token}]]';
+        const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+        
+        fetch(`/tributario/declaraciones/${id}`, {
+            method: 'GET',
+            headers: {
+                [header]: token
+            }
+        })
+        .then(response => response.json())
+        .then(declaracion => {
+            const fechaHoy = new Date().toISOString().split('T')[0];
+            
+            const pagoForm = `
+                <form id="pagoForm">
+                    <input type="hidden" name="declaracionId" value="${id}">
+                    <div class="form-group">
+                        <label class="form-label">Declaración</label>
+                        <div class="form-control" style="background-color:#f8f9fa;border:1px solid #dee2e6;padding:8px">
+                            ${declaracion.contribuyente.razonSocial} - ${declaracion.impuesto.nombre} (${declaracion.periodo})
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monto a Pagar</label>
+                        <div class="form-control" style="background-color:#f8f9fa;border:1px solid #dee2e6;padding:8px;font-weight:bold">
+                            $${declaracion.monto.toLocaleString('es-ES', {minimumFractionDigits: 2})}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monto del Pago *</label>
+                        <input type="number" step="0.01" class="form-control" name="monto" value="${declaracion.monto}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha de Pago *</label>
+                        <input type="date" class="form-control" name="fechaPago" value="${fechaHoy}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Método de Pago *</label>
+                        <select class="form-control" name="metodoPago" id="metodoPago" required style="border: 2px solid #ddd;">
+                            <option value="">Seleccionar método...</option>
+                            <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                            <option value="TARJETA">Tarjeta de Crédito</option>
+                            <option value="EFECTIVO">Efectivo</option>
+                            <option value="CHEQUE">Cheque</option>
+                            <option value="PSE">PSE</option>
+                            <option value="DAVIPLATA">Daviplata</option>
+                            <option value="NEQUI">Nequi</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Referencia</label>
+                        <input type="text" class="form-control" name="referencia" placeholder="Número de transacción o referencia">
+                    </div>
+                </form>
+            `;
+            
+            const pagoModalTitle = `
+                <div style="display:flex;align-items:center;gap:8px">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#10b981">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    Registrar Pago
+                </div>
+            `;
+            
+            openModal(pagoModalTitle, pagoForm, function() {
+                const form = document.getElementById('pagoForm');
+                const formData = new FormData(form);
+                
+                // Agregar evento para resaltar el campo de método de pago
+                const metodoPagoSelect = document.getElementById('metodoPago');
+                if (metodoPagoSelect) {
+                    metodoPagoSelect.addEventListener('change', function() {
+                        if (this.value) {
+                            this.style.borderColor = '#28a745';
+                        } else {
+                            this.style.borderColor = '#dc3545';
+                        }
+                    });
+                }
+                
+                // Obtener token CSRF
+                const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '[[${_csrf.token}]]';
+                const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+                
+                // Validar que todos los campos requeridos estén llenos
+                const metodoPago = formData.get('metodoPago');
+                const monto = formData.get('monto');
+                const fechaPago = formData.get('fechaPago');
+                
+                if (!metodoPago || metodoPago.trim() === '') {
+                    showToast('Por favor seleccione un método de pago', 'error');
+                    return;
+                }
+                
+                if (!monto || parseFloat(monto) <= 0) {
+                    showToast('Por favor ingrese un monto válido', 'error');
+                    return;
+                }
+                
+                if (!fechaPago) {
+                    showToast('Por favor seleccione una fecha de pago', 'error');
+                    return;
+                }
+                
+                console.log('Enviando datos del pago:', {
+                    declaracionId: formData.get('declaracionId'),
+                    monto: formData.get('monto'),
+                    fechaPago: formData.get('fechaPago'),
+                    metodoPago: formData.get('metodoPago'),
+                    referencia: formData.get('referencia')
+                });
+                
+                fetch('/tributario/pagos', {
+                    method: 'POST',
+                    headers: {
+                        [header]: token,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams(formData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`Error ${response.status}: ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    showToast('Pago registrado exitosamente', 'success');
+                    closeModal();
+                    setTimeout(() => location.reload(), 1500);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error al registrar el pago: ' + error.message, 'error');
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error al cargar los datos de la declaración', 'error');
+        });
+    }
+    
+    // Función para cambiar estado de declaración
+    function cambiarEstadoDeclaracion(id) {
+        // Obtener token CSRF
+        const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '[[${_csrf.token}]]';
+        const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+        
+        // Obtener datos de la declaración
+        fetch(`/tributario/declaraciones/${id}`, {
+            method: 'GET',
+            headers: {
+                [header]: token
+            }
+        })
+        .then(response => response.json())
+        .then(declaracion => {
+            const estadoActual = declaracion.estado?.name || declaracion.estado;
+            
+            const estados = [
+                { value: 'PENDIENTE', label: 'Pendiente', class: 'badge-warning' },
+                { value: 'PRESENTADA', label: 'Presentada', class: 'badge-primary' },
+                { value: 'PAGADA', label: 'Pagada', class: 'badge-success' }
+            ];
+            
+            const formEstado = `
+                <form id="cambiarEstadoDeclaracionForm">
+                    <div class="form-group">
+                        <label class="form-label">Seleccionar nuevo estado:</label>
+                        <div style="display:grid;gap:12px;margin-top:16px">
+                            ${estados.map(estado => `
+                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px;border:1px solid #ddd;border-radius:8px;${estadoActual === estado.value ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+                                    <input type="radio" name="estado" value="${estado.value}" style="margin:0" ${estadoActual === estado.value ? 'disabled' : ''}>
+                                    <span class="badge ${estado.class}">${estado.label}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                </form>
+            `;
+            
+            const estadoModalTitle = `
+                <div style="display:flex;align-items:center;gap:8px">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#8b5cf6">
+                        <polyline points="23,4 23,10 17,10"/>
+                        <polyline points="1,20 1,14 7,14"/>
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                    Cambiar Estado de Declaración
+                </div>
+            `;
+            
+            openModal(estadoModalTitle, formEstado, function() {
+                const selectedEstado = document.querySelector('input[name="estado"]:checked');
+                if (!selectedEstado) {
+                    showToast('Debe seleccionar un nuevo estado', 'error');
+                    return;
+                }
+                const nuevoEstado = selectedEstado.value;
+                
+                // Enviar cambio de estado
+                const formData = new FormData();
+                formData.append('estado', nuevoEstado);
+                
+                fetch(`/tributario/declaraciones/${id}/cambiar-estado`, {
+                    method: 'POST',
+                    headers: {
+                        [header]: token
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`Error ${response.status}: ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    showToast('Estado cambiado exitosamente', 'success');
+                    closeModal();
+                    setTimeout(() => location.reload(), 1500);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error al cambiar el estado: ' + error.message, 'error');
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error al cargar los datos de la declaración', 'error');
+        });
+    }
+
+    // Función para eliminar declaración
+    function eliminarDeclaracion(id) {
+        openConfirmModal('¿Está seguro de eliminar esta declaración? Esta acción no se puede deshacer.', function() {
+            // Obtener token CSRF
+            const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '[[${_csrf.token}]]';
+            const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+            
+            fetch(`/tributario/declaraciones/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    [header]: token
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`Error ${response.status}: ${text}`);
+                    });
+                }
+                return response.text();
+            })
+            .then(data => {
+                showToast('Declaración eliminada exitosamente', 'success');
+                setTimeout(() => location.reload(), 1500);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error al eliminar la declaración: ' + error.message, 'error');
+            });
+        });
+    }
+    
+    // Función para exportar declaraciones
+    function exportarDeclaraciones() {
+        window.open('/tributario/declaraciones/export', '_blank');
+        showToast('Iniciando descarga...', 'success');
+    }
+    
+    // Función para mostrar notificaciones toast
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+        toast.innerHTML = `
+            <span style="font-size:16px">${icon}</span>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 4000);
+    }
+    
+    // Filtros y búsqueda
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const filterEstado = document.getElementById('filterEstado');
+        const table = document.getElementById('declaracionesTable');
+        
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const estadoFilter = filterEstado.value;
+            const rows = table.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                if (row.cells.length === 1) return; // Skip empty row
+                
+                const contribuyente = row.cells[0].textContent.toLowerCase();
+                const impuesto = row.cells[1].textContent.toLowerCase();
+                const estado = row.querySelector('.badge').textContent;
+                
+                const matchesSearch = contribuyente.includes(searchTerm) || impuesto.includes(searchTerm);
+                const matchesEstado = !estadoFilter || estado === estadoFilter;
+                
+                row.style.display = matchesSearch && matchesEstado ? '' : 'none';
+            });
+        }
+        
+        searchInput.addEventListener('input', filterTable);
+        filterEstado.addEventListener('change', filterTable);
+    });
+    
+    /*]]>*/
+</script>
+</body>
+</html>
+

@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta http-equiv="Permissions-Policy" content="geolocation=()"/>
+    <title>Gestión de Tasas Municipales - Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons-professional.css}">
+    <link rel="stylesheet" th:href="@{/css/icons.css}">
+    <script th:src="@{/js/theme.js}"></script>
+    <script th:src="@{/js/geolocation-blocker.js}"></script>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header -->
+        <div class="fullscreen-header">
+            <h2 style="margin:0;color:#e2e8f0;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="page-title-icon">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9,22 9,12 15,12 15,22"></polyline>
+                </svg>
+                Gestión de Tasas Municipales
+            </h2>
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="btn-modern btn-modern-success" sec:authorize="hasAnyAuthority('TASAS_WRITE','TASAS_GESTIONAR')" onclick="abrirModalNuevaTasa()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nueva Tasa
+                </button>
+                <button class="btn-modern btn-modern-export" onclick="exportarTasas()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contenido -->
+        <div class="fullscreen-content">
+            <!-- Estadísticas rápidas -->
+            <div class="fullscreen-stats">
+                <div class="stat-card" style="border-left:4px solid #8b5cf6">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Total Tasas</div>
+                    <div style="font-size:32px;font-weight:700;color:#8b5cf6" th:text="${totalTasas}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #f59e0b">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Activas</div>
+                    <div style="font-size:32px;font-weight:700;color:#f59e0b" th:text="${activasTasas}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #10b981">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Pagadas</div>
+                    <div style="font-size:32px;font-weight:700;color:#10b981" th:text="${pagadasTasas}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #ef4444">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Vencidas</div>
+                    <div style="font-size:32px;font-weight:700;color:#ef4444" th:text="${vencidasTasas}">0</div>
+                </div>
+            </div>
+
+            <!-- Tabla de tasas -->
+            <div class="fullscreen-table-container">
+                <div style="padding:20px;border-bottom:1px solid rgba(148, 163, 184, 0.2)">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <h3 style="margin:0;color:#e2e8f0;font-size:18px;font-weight:600">🏠 Lista de Tasas Municipales</h3>
+                        <div style="display:flex;gap:12px;align-items:center">
+                            <input type="text" placeholder="Buscar tasa..." class="form-control" style="width:200px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="buscarTasa">
+                            <select class="form-select" style="width:150px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="filtroEstado">
+                                <option value="">Todos los estados</option>
+                                <option th:each="estado : ${estadosTasa}" th:value="${estado}" th:text="${estado.name()}"></option>
+                            </select>
+                            <select class="form-select" style="width:150px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="filtroTipo">
+                                <option value="">Todos los tipos</option>
+                                <option th:each="tipo : ${tiposTasa}" th:value="${tipo}" th:text="${tipo.name()}"></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="overflow-y:auto;max-height:calc(100vh - 320px)">
+                    <table class="fullscreen-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Contribuyente</th>
+                                    <th>Tipo de Tasa</th>
+                                    <th>Monto</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Vencimiento</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="tasa : ${tasas.content}">
+                                    <td>
+                                        <strong th:text="${tasa.numeroTasa}">TAS-202501-0001</strong>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong th:text="${tasa.contribuyenteNombre}">Nombre</strong><br>
+                                            <small class="text-muted" th:text="${tasa.contribuyenteRif}">RIF</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span th:text="${tasa.tipoTasa.name()}">Tipo</span>
+                                    </td>
+                                    <td>
+                                        <strong th:text="'$' + ${#numbers.formatDecimal(tasa.montoBase, 1, 2)}">$0.00</strong>
+                                        <div th:if="${tasa.montoPagado > 0}" class="small text-success">
+                                            Pagado: $<span th:text="${#numbers.formatDecimal(tasa.montoPagado, 1, 2)}">0.00</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span th:class="'badge ' + ${tasa.estado.name() == 'ACTIVA' ? 'badge-warning' : tasa.estado.name() == 'PAGADA' ? 'badge-success' : tasa.estado.name() == 'VENCIDA' ? 'badge-danger' : 'badge-secondary'}" th:text="${tasa.estado.name()}">Estado</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(tasa.fechaVencimiento, 'dd/MM/yyyy')}">Fecha</td>
+                                    <td>
+                                        <div style="display:flex;gap:8px">
+                                            <!-- Ver tasa - disponible para todos -->
+                                            <button class="btn btn-sm btn-info" 
+                                                    th:onclick="'verTasa(' + ${tasa.id} + ')'">
+                                                👁️
+                                            </button>
+                                            
+                                            <!-- Editar tasa - solo para usuarios con permisos de escritura -->
+                                            <button class="btn btn-sm btn-secondary" 
+                                                    sec:authorize="hasAnyAuthority('TASAS_WRITE','TASAS_GESTIONAR')"
+                                                    th:onclick="'editarTasa(' + ${tasa.id} + ')'">
+                                                ✏️
+                                            </button>
+                                            
+                                            <!-- Registrar pago - solo para usuarios con permisos de escritura -->
+                                            <button th:if="${tasa.estado.name() == 'ACTIVA' or tasa.estado.name() == 'VENCIDA'}" 
+                                                    class="btn btn-sm btn-success" 
+                                                    sec:authorize="hasAnyAuthority('TASAS_WRITE','TASAS_GESTIONAR')"
+                                                    th:onclick="'pagarTasa(' + ${tasa.id} + ')'">
+                                                💰
+                                            </button>
+                                            
+                                            <!-- Eliminar tasa - solo para usuarios con permisos de gestión -->
+                                            <button th:if="${tasa.estado.name() != 'PAGADA'}" 
+                                                    class="btn btn-sm btn-danger" 
+                                                    sec:authorize="hasAnyAuthority('TASAS_GESTIONAR')"
+                                                    th:onclick="'eliminarTasa(' + ${tasa.id} + ')'">
+                                                ❌
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(tasas.content)}">
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        No hay tasas registradas
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Incluir modales -->
+<div th:replace="fragments/modals :: body"></div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// Variables globales
+const contribuyentes = /*[[${contribuyentes}]]*/ [];
+const tiposTasa = /*[[${tiposTasa}]]*/ [];
+
+// Función para abrir modal de nueva tasa
+function abrirModalNuevaTasa() {
+    try {
+        console.log('Abriendo modal de nueva tasa...');
+        
+        const modalTitle = `
+            <div style="display:flex;align-items:center;gap:8px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#8b5cf6">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9,22 9,12 15,12 15,22"></polyline>
+                </svg>
+                Nueva Tasa Municipal
+            </div>
+        `;
+        
+        const formContent = getTasaForm();
+        
+        // Verificar que las funciones necesarias existan
+        if (typeof openModal === 'function') {
+            openModal(modalTitle, formContent, guardarTasa);
+            
+            // Cargar datos después de abrir el modal con manejo de errores
+            setTimeout(() => {
+                try {
+                    cargarContribuyentes();
+                } catch (error) {
+                    console.error('Error al cargar contribuyentes:', error);
+                }
+            }, 200);
+        } else {
+            console.error('Función openModal no disponible');
+            alert('Error: No se puede abrir el modal. Por favor, recargue la página.');
+        }
+    } catch (error) {
+        console.error('Error al abrir modal de nueva tasa:', error);
+        alert('Error al abrir el formulario. Por favor, recargue la página.');
+    }
+}
+
+function getTasaForm() {
+    return `
+        <form id="tasaForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Contribuyente *</label>
+                        <select id="contribuyenteId" name="contribuyenteId" class="form-control" required>
+                            <option value="">Seleccione un contribuyente</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Tipo de Tasa *</label>
+                        <select id="tipoTasa" name="tipoTasa" class="form-control" required>
+                            <option value="">Seleccione tipo de tasa</option>
+                            <option value="ASEO_URBANO">Aseo Urbano</option>
+                            <option value="ALUMBRADO_PUBLICO">Alumbrado Público</option>
+                            <option value="ORNATO_EMBELLECIMIENTO">Ornato y Embellecimiento</option>
+                            <option value="SEGURIDAD_CIUDADANA">Seguridad Ciudadana</option>
+                            <option value="BOMBEROS">Bomberos</option>
+                            <option value="PROTECCION_CIVIL">Protección Civil</option>
+                            <option value="MANTENIMIENTO_VIAL">Mantenimiento Vial</option>
+                            <option value="PARQUES_JARDINES">Parques y Jardines</option>
+                            <option value="CEMENTERIO">Cementerio</option>
+                            <option value="MERCADO_MUNICIPAL">Mercado Municipal</option>
+                            <option value="TRANSPORTE_PUBLICO">Transporte Público</option>
+                            <option value="OTROS">Otros</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Monto Base *</label>
+                        <input type="number" id="montoBase" name="montoBase" class="form-control" step="0.01" min="0.01" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Fecha Vencimiento *</label>
+                        <input type="date" id="fechaVencimiento" name="fechaVencimiento" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Zona Municipal</label>
+                        <input type="text" id="zonaMunicipal" name="zonaMunicipal" class="form-control" placeholder="Zona o sector">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label class="form-label">Dirección</label>
+                <input type="text" id="direccion" name="direccion" class="form-control" placeholder="Dirección del inmueble">
+            </div>
+            
+            <div class="form-group mb-3">
+                <label class="form-label">Observaciones</label>
+                <textarea id="observaciones" name="observaciones" class="form-control" maxlength="1000" rows="2" placeholder="Observaciones adicionales (opcional)"></textarea>
+            </div>
+        </form>
+    `;
+}
+
+function cargarContribuyentes() {
+    fetch('/api/contribuyentes')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const select = document.getElementById('contribuyenteId');
+            if (select) {
+                select.innerHTML = '<option value="">Seleccione un contribuyente</option>';
+                data.forEach(contribuyente => {
+                    const option = document.createElement('option');
+                    option.value = contribuyente.id;
+                    option.textContent = `${contribuyente.razonSocial || contribuyente.nombre + ' ' + contribuyente.apellido} (${contribuyente.rif})`;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar contribuyentes:', error);
+            // Mostrar mensaje de error al usuario
+            const select = document.getElementById('contribuyenteId');
+            if (select) {
+                select.innerHTML = '<option value="">Error al cargar contribuyentes</option>';
+            }
+        });
+}
+
+function guardarTasa() {
+    const form = document.getElementById('tasaForm');
+    const formData = new FormData(form);
+    
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Convertir fecha a LocalDateTime (agregar hora por defecto)
+    const fechaVencimiento = formData.get('fechaVencimiento');
+    const fechaVencimientoISO = fechaVencimiento ? fechaVencimiento + 'T23:59:59' : null;
+    
+    const data = {
+        contribuyenteId: parseInt(formData.get('contribuyenteId')),
+        tipoTasa: formData.get('tipoTasa'),
+        descripcion: formData.get('tipoTasa') + ' - Tasa Municipal', // Campo requerido
+        montoBase: parseFloat(formData.get('montoBase')),
+        periodoFacturacion: 'MENSUAL', // Campo requerido - valor por defecto
+        fechaInicio: new Date().toISOString(), // Campo requerido - fecha actual
+        fechaVencimiento: fechaVencimientoISO,
+        direccion: formData.get('direccion'),
+        zonaMunicipal: formData.get('zonaMunicipal'),
+        observaciones: formData.get('observaciones')
+    };
+    
+    console.log('Datos a enviar:', data);
+    
+    // Obtener token CSRF
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+    
+    console.log('CSRF Token:', csrfToken);
+    console.log('CSRF Header:', csrfHeader);
+    
+    fetch('/tasas/api', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            closeModal();
+            showToast('Tasa municipal creada exitosamente', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            return response.text().then(text => {
+                console.error('Error response:', text);
+                throw new Error(`Error ${response.status}: ${text || 'Error al crear la tasa'}`);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error completo:', error);
+        showToast('Error al crear tasa: ' + error.message, 'error');
+    });
+}
+
+function verTasa(id) {
+    fetch(`/tasas/api/${id}`)
+        .then(response => response.json())
+        .then(tasa => {
+            const modalTitle = `
+                <div style="display:flex;align-items:center;gap:8px">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#3b82f6">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    Detalles de Tasa: ${tasa.numeroTasa}
+                </div>
+            `;
+            
+            const detallesContent = `
+                <style>
+                    .tasa-details-container {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    }
+                    .detail-card {
+                        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                        border: 1px solid #e2e8f0;
+                        border-radius: 12px;
+                        padding: 20px;
+                        margin-bottom: 20px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    }
+                    .detail-card h5 {
+                        color: #1e293b;
+                        font-weight: 600;
+                        margin-bottom: 15px;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+                    .detail-row {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 8px 0;
+                        border-bottom: 1px solid #f1f5f9;
+                    }
+                    .detail-row:last-child {
+                        border-bottom: none;
+                    }
+                    .detail-label {
+                        font-weight: 500;
+                        color: #64748b;
+                        font-size: 14px;
+                    }
+                    .detail-value {
+                        font-weight: 600;
+                        color: #1e293b;
+                        font-size: 14px;
+                    }
+                    .detail-value.highlight {
+                        font-size: 16px;
+                        color: #059669;
+                    }
+                    .detail-value.warning {
+                        color: #d97706;
+                    }
+                    .detail-value.danger {
+                        color: #dc2626;
+                    }
+                    .status-badge {
+                        padding: 6px 12px;
+                        border-radius: 20px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .status-activa { background: #fef3c7; color: #92400e; }
+                    .status-pagada { background: #d1fae5; color: #065f46; }
+                    .status-vencida { background: #fee2e2; color: #991b1b; }
+                    .tasa-number {
+                        font-family: 'Courier New', monospace;
+                        background: #f1f5f9;
+                        padding: 4px 8px;
+                        border-radius: 6px;
+                        font-weight: bold;
+                    }
+                </style>
+                
+                <div class="tasa-details-container">
+                    <!-- Información Principal -->
+                    <div class="detail-card">
+                        <h5>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9,22 9,12 15,12 15,22"></polyline>
+                            </svg>
+                            Información General
+                        </h5>
+                        <div class="detail-row">
+                            <span class="detail-label">Número de Tasa</span>
+                            <span class="detail-value tasa-number">${tasa.numeroTasa}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Tipo de Tasa</span>
+                            <span class="detail-value">${tasa.tipoTasa.replace(/_/g, ' ')}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Estado</span>
+                            <span class="status-badge status-${tasa.estado.toLowerCase()}">${tasa.estado}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Fecha de Registro</span>
+                            <span class="detail-value">${new Date(tasa.fechaRegistro).toLocaleDateString('es-ES', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                            })}</span>
+                        </div>
+                    </div>
+
+                    <!-- Información del Contribuyente -->
+                    <div class="detail-card">
+                        <h5>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            Contribuyente
+                        </h5>
+                        <div class="detail-row">
+                            <span class="detail-label">Nombre/Razón Social</span>
+                            <span class="detail-value">${tasa.contribuyenteNombre}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">RIF</span>
+                            <span class="detail-value">${tasa.contribuyenteRif}</span>
+                        </div>
+                    </div>
+
+                    <!-- Información Financiera -->
+                    <div class="detail-card">
+                        <h5>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            Información Financiera
+                        </h5>
+                        <div class="detail-row">
+                            <span class="detail-label">Monto Base</span>
+                            <span class="detail-value highlight">$${tasa.montoBase.toFixed(2)}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Monto Pagado</span>
+                            <span class="detail-value">${tasa.montoPagado ? '$' + tasa.montoPagado.toFixed(2) : '$0.00'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Saldo Pendiente</span>
+                            <span class="detail-value ${tasa.saldoPendiente > 0 ? 'warning' : 'highlight'}">$${tasa.saldoPendiente.toFixed(2)}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Fecha de Vencimiento</span>
+                            <span class="detail-value ${new Date(tasa.fechaVencimiento) < new Date() ? 'danger' : ''}">${new Date(tasa.fechaVencimiento).toLocaleDateString('es-ES', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                            })}</span>
+                        </div>
+                    </div>
+
+                    ${tasa.direccion || tasa.zonaMunicipal ? `
+                    <!-- Información de Ubicación -->
+                    <div class="detail-card">
+                        <h5>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Ubicación
+                        </h5>
+                        ${tasa.direccion ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Dirección</span>
+                            <span class="detail-value">${tasa.direccion}</span>
+                        </div>
+                        ` : ''}
+                        ${tasa.zonaMunicipal ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Zona Municipal</span>
+                            <span class="detail-value">${tasa.zonaMunicipal}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ` : ''}
+
+                    ${tasa.observaciones ? `
+                    <!-- Observaciones -->
+                    <div class="detail-card">
+                        <h5>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14,2 14,8 20,8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10,9 9,9 8,9"></polyline>
+                            </svg>
+                            Observaciones
+                        </h5>
+                        <div style="padding: 10px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                            <p style="margin: 0; color: #1e293b; line-height: 1.5;">${tasa.observaciones}</p>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            openModal(modalTitle, detallesContent, null, 'Cerrar');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los detalles de la tasa');
+        });
+}
+
+function editarTasa(id) {
+    fetch(`/tasas/api/${id}`)
+        .then(response => response.json())
+        .then(tasa => {
+            const modalTitle = `
+                <div style="display:flex;align-items:center;gap:8px">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#f59e0b">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Editar Tasa: ${tasa.numeroTasa}
+                </div>
+            `;
+            
+            const formContent = getEditarTasaForm(tasa);
+            openModal(modalTitle, formContent, () => actualizarTasa(id));
+            
+            // Cargar contribuyentes después de abrir el modal
+            setTimeout(() => {
+                cargarContribuyentesEditar();
+            }, 100);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los datos de la tasa');
+        });
+}
+
+function pagarTasa(id) {
+    fetch(`/tasas/api/${id}`)
+        .then(response => response.json())
+        .then(tasa => {
+            const modalTitle = `
+                <div style="display:flex;align-items:center;gap:8px">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#10b981">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M16 12l-4-4-4 4"></path>
+                        <path d="M12 16V8"></path>
+                    </svg>
+                    Registrar Pago: ${tasa.numeroTasa}
+                </div>
+            `;
+            
+            const pagoContent = getPagoForm(tasa);
+            openModal(modalTitle, pagoContent, () => procesarPago(id));
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los datos de la tasa');
+        });
+}
+
+function eliminarTasa(id) {
+    if (confirm('¿Está seguro de que desea eliminar esta tasa?\n\nEsta acción no se puede deshacer.')) {
+        fetch(`/tasas/api/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                return response.json().then(error => {
+                    throw new Error(error.error || 'Error desconocido');
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar tasa: ' + error.message);
+        });
+    }
+}
+
+function getEditarTasaForm(tasa) {
+    return `
+        <form id="editarTasaForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Contribuyente *</label>
+                        <select id="editContribuyenteId" name="contribuyenteId" class="form-control" required>
+                            <option value="">Seleccione un contribuyente</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Tipo de Tasa *</label>
+                        <select id="editTipoTasa" name="tipoTasa" class="form-control" required>
+                            <option value="">Seleccione tipo de tasa</option>
+                            <option value="ASEO_URBANO" ${tasa.tipoTasa === 'ASEO_URBANO' ? 'selected' : ''}>Aseo Urbano</option>
+                            <option value="ALUMBRADO_PUBLICO" ${tasa.tipoTasa === 'ALUMBRADO_PUBLICO' ? 'selected' : ''}>Alumbrado Público</option>
+                            <option value="ORNATO_EMBELLECIMIENTO" ${tasa.tipoTasa === 'ORNATO_EMBELLECIMIENTO' ? 'selected' : ''}>Ornato y Embellecimiento</option>
+                            <option value="SEGURIDAD_CIUDADANA" ${tasa.tipoTasa === 'SEGURIDAD_CIUDADANA' ? 'selected' : ''}>Seguridad Ciudadana</option>
+                            <option value="BOMBEROS" ${tasa.tipoTasa === 'BOMBEROS' ? 'selected' : ''}>Bomberos</option>
+                            <option value="PROTECCION_CIVIL" ${tasa.tipoTasa === 'PROTECCION_CIVIL' ? 'selected' : ''}>Protección Civil</option>
+                            <option value="MANTENIMIENTO_VIAL" ${tasa.tipoTasa === 'MANTENIMIENTO_VIAL' ? 'selected' : ''}>Mantenimiento Vial</option>
+                            <option value="PARQUES_JARDINES" ${tasa.tipoTasa === 'PARQUES_JARDINES' ? 'selected' : ''}>Parques y Jardines</option>
+                            <option value="CEMENTERIO" ${tasa.tipoTasa === 'CEMENTERIO' ? 'selected' : ''}>Cementerio</option>
+                            <option value="MERCADO_MUNICIPAL" ${tasa.tipoTasa === 'MERCADO_MUNICIPAL' ? 'selected' : ''}>Mercado Municipal</option>
+                            <option value="TRANSPORTE_PUBLICO" ${tasa.tipoTasa === 'TRANSPORTE_PUBLICO' ? 'selected' : ''}>Transporte Público</option>
+                            <option value="OTROS" ${tasa.tipoTasa === 'OTROS' ? 'selected' : ''}>Otros</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Monto Base *</label>
+                        <input type="number" id="editMontoBase" name="montoBase" class="form-control" step="0.01" min="0.01" value="${tasa.montoBase}" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Fecha Vencimiento *</label>
+                        <input type="date" id="editFechaVencimiento" name="fechaVencimiento" class="form-control" value="${tasa.fechaVencimiento}" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Zona Municipal</label>
+                        <input type="text" id="editZonaMunicipal" name="zonaMunicipal" class="form-control" value="${tasa.zonaMunicipal || ''}" placeholder="Zona o sector">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label class="form-label">Dirección</label>
+                <input type="text" id="editDireccion" name="direccion" class="form-control" value="${tasa.direccion || ''}" placeholder="Dirección del inmueble">
+            </div>
+            
+            <div class="form-group mb-3">
+                <label class="form-label">Observaciones</label>
+                <textarea id="editObservaciones" name="observaciones" class="form-control" maxlength="1000" rows="2" placeholder="Observaciones adicionales (opcional)">${tasa.observaciones || ''}</textarea>
+            </div>
+        </form>
+    `;
+}
+
+function cargarContribuyentesEditar() {
+    fetch('/api/contribuyentes')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('editContribuyenteId');
+            select.innerHTML = '<option value="">Seleccione un contribuyente</option>';
+            data.forEach(contribuyente => {
+                const option = document.createElement('option');
+                option.value = contribuyente.id;
+                option.textContent = `${contribuyente.razonSocial || contribuyente.nombre + ' ' + contribuyente.apellido} (${contribuyente.rif})`;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar contribuyentes:', error);
+        });
+}
+
+function actualizarTasa(id) {
+    const form = document.getElementById('editarTasaForm');
+    const formData = new FormData(form);
+    
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Convertir fecha a LocalDateTime (agregar hora por defecto)
+    const fechaVencimiento = formData.get('fechaVencimiento');
+    const fechaVencimientoISO = fechaVencimiento ? fechaVencimiento + 'T23:59:59' : null;
+    
+    const data = {
+        contribuyenteId: parseInt(formData.get('contribuyenteId')),
+        tipoTasa: formData.get('tipoTasa'),
+        descripcion: formData.get('tipoTasa') + ' - Tasa Municipal', // Campo requerido
+        montoBase: parseFloat(formData.get('montoBase')),
+        periodoFacturacion: 'MENSUAL', // Campo requerido - valor por defecto
+        fechaInicio: new Date().toISOString(), // Campo requerido - fecha actual
+        fechaVencimiento: fechaVencimientoISO,
+        direccion: formData.get('direccion'),
+        zonaMunicipal: formData.get('zonaMunicipal'),
+        observaciones: formData.get('observaciones')
+    };
+    
+    // Obtener token CSRF
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+    
+    fetch(`/tasas/api/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            closeModal();
+            showToast('Tasa municipal actualizada exitosamente', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            return response.json().then(error => {
+                throw new Error(error.error || 'Error al actualizar la tasa');
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error al actualizar tasa: ' + error.message, 'error');
+    });
+}
+
+function getPagoForm(tasa) {
+    return `
+        <style>
+            .pago-summary {
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                border: 1px solid #0ea5e9;
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            .pago-summary h6 {
+                color: #0c4a6e;
+                font-weight: 600;
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .summary-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 5px 0;
+                border-bottom: 1px solid #bae6fd;
+            }
+            .summary-row:last-child {
+                border-bottom: none;
+                font-weight: 600;
+                font-size: 16px;
+                color: #0c4a6e;
+            }
+            .summary-label {
+                color: #0369a1;
+            }
+            .summary-value {
+                color: #0c4a6e;
+                font-weight: 500;
+            }
+            .form-section {
+                background: #f8fafc;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 15px;
+                border-left: 4px solid #10b981;
+            }
+            .form-section h6 {
+                color: #065f46;
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+        </style>
+        
+        <div class="pago-summary">
+            <h6>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                </svg>
+                Resumen de Pago
+            </h6>
+            <div class="summary-row">
+                <span class="summary-label">Tasa:</span>
+                <span class="summary-value">${tasa.numeroTasa}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Contribuyente:</span>
+                <span class="summary-value">${tasa.contribuyenteNombre}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Tipo:</span>
+                <span class="summary-value">${tasa.tipoTasa.replace(/_/g, ' ')}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Saldo Pendiente:</span>
+                <span class="summary-value">$${tasa.saldoPendiente.toFixed(2)}</span>
+            </div>
+        </div>
+        
+        <form id="pagoForm">
+            <div class="form-section">
+                <h6>💰 Información del Pago</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Monto a Pagar *</label>
+                            <input type="number" id="montoPago" name="montoPago" class="form-control" step="0.01" min="0.01" max="${tasa.saldoPendiente}" value="${tasa.saldoPendiente}" required>
+                            <small class="form-text text-muted">Máximo disponible: $${tasa.saldoPendiente.toFixed(2)}</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Fecha de Pago *</label>
+                            <input type="date" id="fechaPago" name="fechaPago" class="form-control" value="${new Date().toISOString().split('T')[0]}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h6>💳 Método de Pago</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Método de Pago *</label>
+                            <select id="metodoPago" name="metodoPago" class="form-control" required>
+                                <option value="">Seleccione método de pago</option>
+                                <option value="EFECTIVO">💵 Efectivo</option>
+                                <option value="TRANSFERENCIA">🏦 Transferencia Bancaria</option>
+                                <option value="CHEQUE">📄 Cheque</option>
+                                <option value="TARJETA_DEBITO">💳 Tarjeta de Débito</option>
+                                <option value="TARJETA_CREDITO">💳 Tarjeta de Crédito</option>
+                                <option value="DEPOSITO">🏪 Depósito Bancario</option>
+                                <option value="PAGO_MOVIL">📱 Pago Móvil</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Número de Referencia</label>
+                            <input type="text" id="numeroReferencia" name="numeroReferencia" class="form-control" placeholder="Ej: 123456789" maxlength="50">
+                            <small class="form-text text-muted">Número de transacción, cheque o referencia</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h6>📝 Información Adicional</h6>
+                <div class="form-group mb-3">
+                    <label class="form-label">Observaciones del Pago</label>
+                    <textarea id="observacionesPago" name="observacionesPago" class="form-control" rows="3" placeholder="Observaciones adicionales sobre el pago (opcional)" maxlength="500"></textarea>
+                    <small class="form-text text-muted">Máximo 500 caracteres</small>
+                </div>
+            </div>
+        </form>
+    `;
+}
+
+function procesarPago(tasaId) {
+    const form = document.getElementById('pagoForm');
+    const formData = new FormData(form);
+    
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Mostrar confirmación antes de procesar
+    const montoPago = parseFloat(formData.get('montoPago'));
+    const metodoPago = formData.get('metodoPago');
+    
+    if (!confirm(`¿Confirmar el registro de pago?\n\nMonto: $${montoPago.toFixed(2)}\nMétodo: ${metodoPago}\n\nEsta acción no se puede deshacer.`)) {
+        return;
+    }
+    
+    const data = {
+        monto: montoPago,
+        fechaPago: formData.get('fechaPago'),
+        metodoPago: metodoPago,
+        numeroReferencia: formData.get('numeroReferencia'),
+        observaciones: formData.get('observacionesPago')
+    };
+    
+    // Mostrar indicador de carga
+    const originalButton = document.querySelector('#pagoForm').parentElement.parentElement.querySelector('.btn-primary');
+    if (originalButton) {
+        originalButton.disabled = true;
+        originalButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
+    }
+    
+    // Obtener token CSRF
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+    
+    fetch(`/tasas/api/${tasaId}/pago`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            return response.json().then(error => {
+                throw new Error(error.error || 'Error al procesar el pago');
+            });
+        }
+    })
+    .then(result => {
+        closeModal();
+        
+        // Mostrar mensaje de éxito con toast
+        showToast(`Pago registrado exitosamente - Monto: $${result.montoPagado.toFixed(2)} - Método: ${data.metodoPago}`, 'success');
+        
+        // Recargar la página para mostrar los cambios
+        setTimeout(() => location.reload(), 1500);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        
+        // Restaurar botón
+        if (originalButton) {
+            originalButton.disabled = false;
+            originalButton.innerHTML = 'Registrar Pago';
+        }
+        
+        // Mostrar error con toast
+        showToast(`Error al procesar el pago: ${error.message}`, 'error');
+    });
+}
+
+// Funciones de filtrado
+function inicializarFiltros() {
+    const buscarInput = document.getElementById('buscarTasa');
+    const filtroEstado = document.getElementById('filtroEstado');
+    const filtroTipo = document.getElementById('filtroTipo');
+    
+    if (buscarInput) {
+        buscarInput.addEventListener('input', filtrarTabla);
+    }
+    if (filtroEstado) {
+        filtroEstado.addEventListener('change', filtrarTabla);
+    }
+    if (filtroTipo) {
+        filtroTipo.addEventListener('change', filtrarTabla);
+    }
+}
+
+function filtrarTabla() {
+    const buscar = document.getElementById('buscarTasa')?.value.toLowerCase() || '';
+    const estado = document.getElementById('filtroEstado')?.value || '';
+    const tipo = document.getElementById('filtroTipo')?.value || '';
+    
+    const filas = document.querySelectorAll('.fullscreen-table tbody tr');
+    
+    filas.forEach(fila => {
+        if (fila.cells.length < 7) return; // Skip empty state row
+        
+        const numero = fila.cells[0].textContent.toLowerCase();
+        const contribuyente = fila.cells[1].textContent.toLowerCase();
+        const tipoTasa = fila.cells[2].textContent;
+        const estadoTasa = fila.querySelector('.badge')?.textContent || '';
+        
+        const coincideBuscar = numero.includes(buscar) || contribuyente.includes(buscar);
+        const coincideEstado = !estado || estadoTasa === estado;
+        const coincideTipo = !tipo || tipoTasa === tipo;
+        
+        if (coincideBuscar && coincideEstado && coincideTipo) {
+            fila.style.display = '';
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+}
+
+function exportarTasas() {
+    // Crear datos para exportar
+    const tasas = [];
+    const filas = document.querySelectorAll('.fullscreen-table tbody tr');
+    
+    filas.forEach(fila => {
+        if (fila.cells.length >= 7 && fila.style.display !== 'none') {
+            tasas.push({
+                numero: fila.cells[0].textContent.trim(),
+                contribuyente: fila.cells[1].textContent.trim(),
+                tipo: fila.cells[2].textContent.trim(),
+                monto: fila.cells[3].textContent.trim(),
+                estado: fila.cells[4].textContent.trim(),
+                fechaVencimiento: fila.cells[5].textContent.trim()
+            });
+        }
+    });
+    
+    if (tasas.length === 0) {
+        alert('No hay tasas para exportar');
+        return;
+    }
+    
+    // Crear CSV
+    let csv = 'Número,Contribuyente,Tipo de Tasa,Monto,Estado,Fecha Vencimiento\n';
+    tasas.forEach(tasa => {
+        csv += `"${tasa.numero}","${tasa.contribuyente}","${tasa.tipo}","${tasa.monto}","${tasa.estado}","${tasa.fechaVencimiento}"\n`;
+    });
+    
+    // Descargar archivo
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `tasas_municipales_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Función para mostrar notificaciones toast
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+    toast.innerHTML = `
+        <span style="font-size:16px">${icon}</span>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 4000);
+}
+
+// Inicializar filtros cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    inicializarFiltros();
+});
+</script>
+
+</body>
+</html>

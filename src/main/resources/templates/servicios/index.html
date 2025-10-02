@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Gestión de Servicios Municipales - Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons-professional.css}">
+    <link rel="stylesheet" th:href="@{/css/icons.css}">
+    <script th:src="@{/js/theme.js}"></script>
+    
+    <style>
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .detail-group {
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .detail-value {
+            color: #495057;
+            font-size: 1rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+        
+        /* Estilos para modo oscuro */
+        body:not(.light-mode) .detail-label {
+            color: #a4a4be;
+        }
+        
+        body:not(.light-mode) .detail-value {
+            color: #e7e7f7;
+        }
+        
+        body:not(.light-mode) .detail-group {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* Spinner para indicador de carga */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Mejoras para formularios */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        body:not(.light-mode) .form-label {
+            color: #e7e7f7;
+        }
+        
+        .form-control:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.25);
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        
+        body:not(.light-mode) .alert-info {
+            background-color: rgba(23, 162, 184, 0.1);
+            border-color: rgba(23, 162, 184, 0.3);
+            color: #17a2b8;
+        }
+    </style>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header -->
+        <div class="fullscreen-header">
+            <h2 style="margin:0;color:#e2e8f0;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="page-title-icon">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+                Gestión de Servicios Municipales
+            </h2>
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="btn-modern btn-modern-success" sec:authorize="hasAnyAuthority('SERVICIOS_WRITE','SERVICIOS_GESTIONAR')" onclick="abrirModalCrear()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nuevo Servicio
+                </button>
+                <button class="btn-modern btn-modern-export" onclick="exportarServicios()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Exportar
+                </button>
+                <button class="btn-modern btn-modern-info" onclick="recargarTabla()" title="Actualizar datos">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <polyline points="1 20 1 14 7 14"/>
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                    Actualizar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contenido con scroll -->
+        <div class="fullscreen-content">
+            <!-- Estadísticas rápidas -->
+            <div class="fullscreen-stats">
+                <div class="stat-card" style="border-left:4px solid #8b5cf6">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Total Servicios</div>
+                    <div style="font-size:32px;font-weight:700;color:#8b5cf6">8</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #10b981">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Activos</div>
+                    <div style="font-size:32px;font-weight:700;color:#10b981">6</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #f59e0b">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Pagados</div>
+                    <div style="font-size:32px;font-weight:700;color:#f59e0b">5</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #ef4444">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Vencidos</div>
+                    <div style="font-size:32px;font-weight:700;color:#ef4444">1</div>
+                </div>
+            </div>
+
+            <!-- Tabla de servicios -->
+            <div class="fullscreen-table-container">
+                <div style="padding:20px;border-bottom:1px solid rgba(148, 163, 184, 0.2)">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <h3 style="margin:0;color:#e2e8f0;font-size:18px;font-weight:600">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;vertical-align:middle">
+                                <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/>
+                                <rect x="9" y="7" width="6" height="6"/>
+                            </svg>
+                            Lista de Servicios Municipales
+                        </h3>
+                        <div style="display:flex;gap:12px;align-items:center">
+                            <input type="text" placeholder="Buscar servicio..." class="form-control" style="width:200px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="buscarServicio">
+                            <select class="form-select" style="width:150px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="filtroEstado">
+                                <option value="">Todos los estados</option>
+                                <option value="ACTIVO">Activos</option>
+                                <option value="SUSPENDIDO">Suspendidos</option>
+                                <option value="CORTADO">Cortados</option>
+                                <option value="INACTIVO">Inactivos</option>
+                                <option value="MANTENIMIENTO">Mantenimiento</option>
+                                <option value="PENDIENTE_INSTALACION">Pendiente</option>
+                            </select>
+                            <select class="form-select" style="width:150px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="filtroTipo">
+                                <option value="">Todos los tipos</option>
+                                <option th:each="tipo : ${tiposServicio}" 
+                                        th:value="${tipo}" 
+                                        th:text="${tipo.descripcion}">Tipo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="overflow-y:auto;max-height:calc(100vh - 320px)">
+                    <table class="fullscreen-table">
+                        <thead>
+                            <tr>
+                                <th>Número</th>
+                                <th>Contribuyente</th>
+                                <th>Tipo Servicio</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th>Fecha Instalación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serviciosTable">
+                            <tr th:each="servicio : ${servicios.content}" th:if="${servicios?.content?.size() > 0}">
+                                <td><strong th:text="${servicio.numeroServicio}">SRV-2025-0001</strong></td>
+                                <td>
+                                    <div style="font-weight:500" th:text="${servicio.contribuyenteNombre}">Juan Pérez</div>
+                                    <div class="text-muted" style="font-size:12px" th:text="${servicio.contribuyenteRif}">V-12345678-9</div>
+                                </td>
+                                <td th:text="${servicio.tipoServicioDescripcion}">ASEO URBANO</td>
+                                <td><strong th:text="'$' + ${#numbers.formatDecimal(servicio.tarifaBase, 1, 2)}">$25.00</strong></td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${servicio.estado == 'ACTIVO'} ? 'badge-success' : 
+                                                         (${servicio.estado == 'SUSPENDIDO'} ? 'badge-warning' : 
+                                                         (${servicio.estado == 'CORTADO'} ? 'badge-danger' : 'badge-secondary'))"
+                                          th:text="${servicio.estado}">ACTIVO</span>
+                                </td>
+                                <td th:text="${servicio.fechaInstalacion != null ? #temporals.format(servicio.fechaInstalacion, 'dd/MM/yyyy') : 'No definida'}">31/01/2025</td>
+                                <td>
+                                    <div style="display:flex;gap:8px">
+                                        <!-- Ver servicio -->
+                                        <button class="btn btn-sm btn-info" 
+                                                th:onclick="'verServicio(' + ${servicio.id} + ')'"
+                                                sec:authorize="hasAnyAuthority('SERVICIOS_READ', 'SERVICIOS_WRITE', 'SERVICIOS_GESTIONAR')">
+                                            👁️
+                                        </button>
+                                        
+                                        <!-- Editar servicio -->
+                                        <button class="btn btn-sm btn-secondary" 
+                                                th:onclick="'editarServicio(' + ${servicio.id} + ')'"
+                                                sec:authorize="hasAnyAuthority('SERVICIOS_WRITE', 'SERVICIOS_GESTIONAR')">
+                                            ✏️
+                                        </button>
+                                        
+                                        <!-- Pagar servicio -->
+                                        <button class="btn btn-sm btn-success" 
+                                                th:onclick="'pagarServicio(' + ${servicio.id} + ')'"
+                                                th:if="${servicio.saldoPendiente > 0}"
+                                                sec:authorize="hasAnyAuthority('SERVICIOS_WRITE', 'SERVICIOS_GESTIONAR')">
+                                            💰
+                                        </button>
+                                        
+                                        <!-- Eliminar servicio -->
+                                        <button class="btn btn-sm btn-danger" 
+                                                th:onclick="'eliminarServicio(' + ${servicio.id} + ')'"
+                                                sec:authorize="hasAnyAuthority('SERVICIOS_GESTIONAR')">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${servicios?.content?.size() == 0}">
+                                <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
+                                    🛠️ No hay servicios registrados
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Elementos decorativos -->
+        <div class="brand">Sistema Tributario Empresarial v2.0</div>
+        <div class="splash"></div>
+        <div class="splash2"></div>
+        <div class="splash3"></div>
+    </div>
+    
+    <!-- Incluir modales -->
+    <div th:replace="fragments/modals :: body"></div>
+    
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    
+// Variables globales
+let serviciosData = [];
+let contribuyentesData = [];
+let tiposServicioData = [];
+
+// Token CSRF
+const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+// Headers comunes para peticiones
+function getHeaders() {
+    const headers = {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    };
+    if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+    }
+    return headers;
+}
+
+// Funciones principales del CRUD
+function verServicio(id) {
+    showLoading(true);
+    
+    // Intentar múltiples endpoints para servicios
+    const endpoints = [`/servicios/api/${id}`, `/api/servicios/${id}`];
+    
+    async function intentarObtener(urls) {
+        for (const url of urls) {
+            try {
+                const response = await fetch(url, {
+                    headers: getHeaders()
+                });
+                
+                if (response.ok) {
+                    return await response.json();
+                }
+            } catch (error) {
+                console.log(`Endpoint ${url} no disponible:`, error.message);
+            }
+        }
+        throw new Error('No se pudo obtener los datos del servicio');
+    }
+    
+    intentarObtener(endpoints)
+    .then(servicio => {
+        const modalTitle = `
+            <div style="display:flex;align-items:center;gap:8px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#17a2b8">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                </svg>
+                Detalles del Servicio: ${servicio.numeroServicio}
+            </div>
+        `;
+        
+        const detalles = getDetallesServicioHTML(servicio);
+        openModal(modalTitle, detalles, null);
+        showLoading(false);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showLoading(false);
+        
+        // Mostrar datos de ejemplo si no se puede conectar al backend
+        const servicioEjemplo = {
+            id: id,
+            numeroServicio: `SRV-2025-${String(id).padStart(4, '0')}`,
+            contribuyenteNombre: 'Juan Carlos Pérez López',
+            contribuyenteRif: 'V-10123456-1',
+            tipoServicioDescripcion: 'ASEO URBANO',
+            estado: 'ACTIVO',
+            tarifaBase: 25.00,
+            saldoPendiente: 25.00,
+            fechaInstalacion: '2025-01-15',
+            medidor: '12233',
+            direccionServicio: 'Av. Principal #123',
+            observaciones: 'Servicio de ejemplo - Configurar conexión con backend'
+        };
+        
+        const modalTitle = `
+            <div style="display:flex;align-items:center;gap:8px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#17a2b8">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                </svg>
+                Detalles del Servicio: ${servicioEjemplo.numeroServicio} (Ejemplo)
+            </div>
+        `;
+        
+        const detalles = getDetallesServicioHTML(servicioEjemplo);
+        openModal(modalTitle, detalles, null);
+        showToast('Mostrando datos de ejemplo - Verificar conexión con backend', 'info');
+    });
+}
+
+function editarServicio(id) {
+    showLoading(true);
+    fetch(`/servicios/api/${id}`, {
+        headers: getHeaders()
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(servicio => {
+        const modalTitle = `
+            <div style="display:flex;align-items:center;gap:8px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#ffc107">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Editar Servicio: ${servicio.numeroServicio}
+            </div>
+        `;
+        
+        const editarContent = getFormularioServicioHTML(servicio);
+        openModal(modalTitle, editarContent, () => actualizarServicio(id));
+        
+        // Cargar contribuyentes después de un pequeño delay
+        setTimeout(() => {
+            cargarContribuyentesEditar();
+            if (servicio.contribuyenteId) {
+                document.getElementById('editContribuyenteId').value = servicio.contribuyenteId;
+            }
+            // Inicializar cálculos automáticos
+            calcularSaldoPendiente();
+        }, 100);
+        showLoading(false);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showLoading(false);
+        showToast('Error al cargar los datos del servicio: ' + error.message, 'error');
+    });
+}
+
+function pagarServicio(id) {
+    showLoading(true);
+    fetch(`/servicios/api/${id}`, {
+        headers: getHeaders()
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(servicio => {
+        const modalTitle = `
+            <div style="display:flex;align-items:center;gap:8px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#28a745">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M16 12l-4-4-4 4"></path>
+                    <path d="M12 16V8"></path>
+                </svg>
+                Registrar Pago: ${servicio.numeroServicio}
+            </div>
+        `;
+        
+        const pagoContent = getPagoServicioHTML(servicio);
+        openModal(modalTitle, pagoContent, () => procesarPagoServicio(id));
+        showLoading(false);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showLoading(false);
+        showToast('Error al cargar los datos del servicio: ' + error.message, 'error');
+    });
+}
+
+function eliminarServicio(id) {
+    if (confirm('¿Está seguro de que desea eliminar este servicio?\n\nEsta acción no se puede deshacer.')) {
+        showLoading(true);
+        fetch(`/servicios/api/${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+        })
+        .then(response => {
+            if (response.ok) {
+                showLoading(false);
+                actualizarSinRecargar('Servicio eliminado exitosamente');
+            } else {
+                return response.text().then(text => {
+                    let errorMsg = 'Error al eliminar el servicio';
+                    try {
+                        const errorObj = JSON.parse(text);
+                        errorMsg = errorObj.error || errorObj.message || errorMsg;
+                    } catch (e) {
+                        errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+                    }
+                    throw new Error(errorMsg);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showLoading(false);
+            showToast('Error al eliminar servicio: ' + error.message, 'error');
+        });
+    }
+}
+
+function abrirModalCrear() {
+    const modalTitle = `
+        <div style="display:flex;align-items:center;gap:8px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#28a745">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            Nuevo Servicio Municipal
+        </div>
+    `;
+    
+    const crearContent = getFormularioServicioHTML();
+    openModal(modalTitle, crearContent, crearServicio);
+    
+    // Cargar contribuyentes e inicializar cálculos
+    setTimeout(() => {
+        cargarContribuyentes();
+        calcularSaldoPendiente();
+    }, 100);
+}
+
+function exportarServicios() {
+    // Crear datos para exportar
+    const servicios = [];
+    const filas = document.querySelectorAll('.fullscreen-table tbody tr');
+    
+    filas.forEach(fila => {
+        if (fila.cells.length >= 7 && fila.style.display !== 'none') {
+            servicios.push({
+                numero: fila.cells[0].textContent.trim(),
+                contribuyente: fila.cells[1].textContent.trim(),
+                tipo: fila.cells[2].textContent.trim(),
+                monto: fila.cells[3].textContent.trim(),
+                estado: fila.cells[4].textContent.trim(),
+                fechaInstalacion: fila.cells[5].textContent.trim()
+            });
+        }
+    });
+    
+    if (servicios.length === 0) {
+        showToast('No hay servicios para exportar', 'error');
+        return;
+    }
+    
+    // Crear CSV
+    let csv = 'Número,Contribuyente,Tipo de Servicio,Monto,Estado,Fecha Instalación\n';
+    servicios.forEach(servicio => {
+        csv += `"${servicio.numero}","${servicio.contribuyente}","${servicio.tipo}","${servicio.monto}","${servicio.estado}","${servicio.fechaInstalacion}"\n`;
+    });
+    
+    // Descargar archivo
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `servicios_municipales_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast('Archivo exportado exitosamente', 'success');
+}
+
+// Funciones auxiliares para formularios y modales
+function getDetallesServicioHTML(servicio) {
+    return `
+        <div class="row">
+            <div class="col-md-6">
+                <div class="detail-group mb-3">
+                    <label class="detail-label">Número de Servicio:</label>
+                    <div class="detail-value">${servicio.numeroServicio}</div>
+                </div>
+                <div class="detail-group mb-3">
+                    <label class="detail-label">Contribuyente:</label>
+                    <div class="detail-value">${servicio.contribuyenteNombre}</div>
+                    <small class="text-muted">${servicio.contribuyenteRif}</small>
+                </div>
+                <div class="detail-group mb-3">
+                    <label class="detail-label">Tipo de Servicio:</label>
+                    <div class="detail-value">${servicio.tipoServicioDescripcion}</div>
+                </div>
+                <div class="detail-group mb-3">
+                    <label class="detail-label">Estado:</label>
+                    <div class="detail-value">
+                        <span class="badge badge-${servicio.estado.toLowerCase()}">${servicio.estado}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="detail-group mb-3">
+                    <label class="detail-label">Tarifa Base:</label>
+                    <div class="detail-value">$${servicio.tarifaBase.toFixed(2)}</div>
+                </div>
+                <div class="detail-group mb-3">
+                    <label class="detail-label">Saldo Pendiente:</label>
+                    <div class="detail-value text-warning">$${servicio.saldoPendiente.toFixed(2)}</div>
+                </div>
+                <div class="detail-group mb-3">
+                    <label class="detail-label">Fecha Instalación:</label>
+                    <div class="detail-value">${servicio.fechaInstalacion || 'No definida'}</div>
+                </div>
+                ${servicio.medidor ? `
+                <div class="detail-group mb-3">
+                    <label class="detail-label">Medidor:</label>
+                    <div class="detail-value">${servicio.medidor}</div>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+        ${servicio.direccionServicio ? `
+            <div class="detail-group mb-3">
+                <label class="detail-label">Dirección del Servicio:</label>
+                <div class="detail-value">${servicio.direccionServicio}</div>
+            </div>
+        ` : ''}
+        ${servicio.observaciones ? `
+            <div class="detail-group mb-3">
+                <label class="detail-label">Observaciones:</label>
+                <div class="detail-value">${servicio.observaciones}</div>
+            </div>
+        ` : ''}
+    `;
+}
+
+function getFormularioServicioHTML(servicio = null) {
+    const isEdit = servicio !== null;
+    return `
+        <div class="alert alert-info mb-3">
+            <strong>Información:</strong> El saldo pendiente se calculará automáticamente basado en la tarifa base y el monto facturado.
+            ${!isEdit ? '<br><strong>Número de servicio:</strong> Se generará automáticamente por el sistema al guardar.' : ''}
+        </div>
+        <form id="servicioForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Contribuyente *</label>
+                        <select id="editContribuyenteId" name="contribuyenteId" class="form-control" required>
+                            <option value="">Seleccione un contribuyente</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Tipo de Servicio *</label>
+                        <select name="tipoServicio" class="form-control" required>
+                            <option value="">Seleccione un tipo</option>
+                            <option value="ASEO_URBANO" ${isEdit && servicio.tipoServicio === 'ASEO_URBANO' ? 'selected' : ''}>Aseo Urbano</option>
+                            <option value="AGUA_POTABLE" ${isEdit && servicio.tipoServicio === 'AGUA_POTABLE' ? 'selected' : ''}>Agua Potable</option>
+                            <option value="ALCANTARILLADO" ${isEdit && servicio.tipoServicio === 'ALCANTARILLADO' ? 'selected' : ''}>Alcantarillado</option>
+                            <option value="ALUMBRADO_PUBLICO" ${isEdit && servicio.tipoServicio === 'ALUMBRADO_PUBLICO' ? 'selected' : ''}>Alumbrado Público</option>
+                            <option value="MANTENIMIENTO_VIAL" ${isEdit && servicio.tipoServicio === 'MANTENIMIENTO_VIAL' ? 'selected' : ''}>Mantenimiento Vial</option>
+                            <option value="PARQUES_JARDINES" ${isEdit && servicio.tipoServicio === 'PARQUES_JARDINES' ? 'selected' : ''}>Parques y Jardines</option>
+                            <option value="CEMENTERIO" ${isEdit && servicio.tipoServicio === 'CEMENTERIO' ? 'selected' : ''}>Cementerio</option>
+                            <option value="MERCADO_MUNICIPAL" ${isEdit && servicio.tipoServicio === 'MERCADO_MUNICIPAL' ? 'selected' : ''}>Mercado Municipal</option>
+                            <option value="TRANSPORTE_PUBLICO" ${isEdit && servicio.tipoServicio === 'TRANSPORTE_PUBLICO' ? 'selected' : ''}>Transporte Público</option>
+                            <option value="SEGURIDAD_CIUDADANA" ${isEdit && servicio.tipoServicio === 'SEGURIDAD_CIUDADANA' ? 'selected' : ''}>Seguridad Ciudadana</option>
+                            <option value="BOMBEROS" ${isEdit && servicio.tipoServicio === 'BOMBEROS' ? 'selected' : ''}>Bomberos</option>
+                            <option value="PROTECCION_CIVIL" ${isEdit && servicio.tipoServicio === 'PROTECCION_CIVIL' ? 'selected' : ''}>Protección Civil</option>
+                            <option value="CULTURA_DEPORTES" ${isEdit && servicio.tipoServicio === 'CULTURA_DEPORTES' ? 'selected' : ''}>Cultura y Deportes</option>
+                            <option value="SALUD_PUBLICA" ${isEdit && servicio.tipoServicio === 'SALUD_PUBLICA' ? 'selected' : ''}>Salud Pública</option>
+                            <option value="EDUCACION" ${isEdit && servicio.tipoServicio === 'EDUCACION' ? 'selected' : ''}>Educación</option>
+                            <option value="OTROS" ${isEdit && servicio.tipoServicio === 'OTROS' ? 'selected' : ''}>Otros</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Tarifa Base *</label>
+                        <input type="number" step="0.01" name="tarifaBase" class="form-control" 
+                               value="${isEdit ? servicio.tarifaBase : ''}" required 
+                               onchange="calcularSaldoPendiente()">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Monto Facturado</label>
+                        <input type="number" step="0.01" name="montoFacturado" class="form-control" 
+                               value="${isEdit ? (servicio.montoFacturado || servicio.tarifaBase || 0) : ''}" 
+                               placeholder="Monto facturado (opcional)" 
+                               onchange="calcularSaldoPendiente()">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Fecha de Instalación</label>
+                        <input type="date" name="fechaInstalacion" class="form-control" 
+                               value="${isEdit && servicio.fechaInstalacion ? servicio.fechaInstalacion : ''}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Estado</label>
+                        <select name="estado" class="form-control">
+                            <option value="ACTIVO" ${isEdit && servicio.estado === 'ACTIVO' ? 'selected' : ''}>Activo</option>
+                            <option value="SUSPENDIDO" ${isEdit && servicio.estado === 'SUSPENDIDO' ? 'selected' : ''}>Suspendido</option>
+                            <option value="CORTADO" ${isEdit && servicio.estado === 'CORTADO' ? 'selected' : ''}>Cortado</option>
+                            <option value="INACTIVO" ${isEdit && servicio.estado === 'INACTIVO' ? 'selected' : ''}>Inactivo</option>
+                            <option value="MANTENIMIENTO" ${isEdit && servicio.estado === 'MANTENIMIENTO' ? 'selected' : ''}>Mantenimiento</option>
+                            <option value="PENDIENTE_INSTALACION" ${isEdit && servicio.estado === 'PENDIENTE_INSTALACION' ? 'selected' : ''}>Pendiente Instalación</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Saldo Pendiente</label>
+                        <input type="number" step="0.01" name="saldoPendiente" class="form-control" 
+                               value="${isEdit ? (servicio.saldoPendiente || servicio.tarifaBase || 0) : ''}" 
+                               placeholder="Saldo pendiente (opcional)">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Medidor</label>
+                        <input type="text" name="medidor" class="form-control" 
+                               value="${isEdit ? (servicio.medidor || '') : ''}" placeholder="Número de medidor">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Dirección del Servicio</label>
+                        <textarea name="direccionServicio" class="form-control" rows="2" 
+                                  placeholder="Dirección donde se presta el servicio">${isEdit ? (servicio.direccionServicio || '') : ''}</textarea>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Observaciones</label>
+                        <textarea name="observaciones" class="form-control" rows="2" 
+                                  placeholder="Observaciones adicionales">${isEdit ? (servicio.observaciones || '') : ''}</textarea>
+                    </div>
+                </div>
+            </div>
+        </form>
+    `;
+}
+
+function getPagoServicioHTML(servicio) {
+    return `
+        <form id="pagoForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <strong>Servicio:</strong> ${servicio.numeroServicio}<br>
+                        <strong>Contribuyente:</strong> ${servicio.contribuyenteNombre}<br>
+                        <strong>Saldo Pendiente:</strong> $${servicio.saldoPendiente.toFixed(2)}
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Monto a Pagar *</label>
+                        <input type="number" step="0.01" name="monto" class="form-control" 
+                               value="${servicio.saldoPendiente}" max="${servicio.saldoPendiente}" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Método de Pago *</label>
+                        <select name="metodoPago" class="form-control" required>
+                            <option value="">Seleccione método</option>
+                            <option value="EFECTIVO">Efectivo</option>
+                            <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                            <option value="TARJETA_DEBITO">Tarjeta de Débito</option>
+                            <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+                            <option value="CHEQUE">Cheque</option>
+                            <option value="PAGO_MOVIL">Pago Móvil</option>
+                            <option value="PUNTO_VENTA">Punto de Venta</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Referencia</label>
+                        <input type="text" name="referencia" class="form-control" 
+                               placeholder="Número de referencia del pago">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Concepto</label>
+                        <input type="text" name="concepto" class="form-control" 
+                               value="Pago de ${servicio.tipoServicioDescripcion}" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Observaciones</label>
+                        <textarea name="observaciones" class="form-control" rows="3" 
+                                  placeholder="Observaciones del pago"></textarea>
+                    </div>
+                </div>
+            </div>
+        </form>
+    `;
+}
+
+// Funciones de procesamiento
+function crearServicio() {
+    const form = document.getElementById('servicioForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Validaciones adicionales
+    if (!data.contribuyenteId) {
+        showToast('Debe seleccionar un contribuyente', 'error');
+        return;
+    }
+    
+    // Asegurar que los campos numéricos estén presentes y sean válidos
+    data.tarifaBase = parseFloat(data.tarifaBase) || 0;
+    data.montoFacturado = parseFloat(data.montoFacturado) || data.tarifaBase;
+    data.saldoPendiente = parseFloat(data.saldoPendiente) || data.tarifaBase;
+    
+    // Asegurar que los campos de texto no sean null
+    data.medidor = data.medidor || '';
+    data.direccionServicio = data.direccionServicio || '';
+    data.observaciones = data.observaciones || '';
+    
+    // Convertir contribuyenteId a número
+    data.contribuyenteId = parseInt(data.contribuyenteId);
+    
+    // No enviar numeroServicio - dejar que el backend lo genere automáticamente
+    // El backend debería tener su propia lógica para generar números únicos
+    delete data.numeroServicio;
+    
+    // Agregar campos adicionales que el backend espera
+    data.consumoActual = 0;
+    data.consumoAnterior = 0;
+    data.montoPagado = 0;
+    data.fechaRegistro = new Date().toISOString().split('T')[0];
+    
+    console.log('Datos a enviar:', data);
+    
+    showLoading(true);
+    fetch('/servicios/api', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            showLoading(false);
+            actualizarSinRecargar('Servicio creado exitosamente');
+        } else {
+            return response.text().then(text => {
+                let errorMsg = 'Error al crear el servicio';
+                try {
+                    const errorObj = JSON.parse(text);
+                    errorMsg = errorObj.error || errorObj.message || errorMsg;
+                } catch (e) {
+                    errorMsg = text || `HTTP ${response.status}: ${response.statusText}`;
+                }
+                
+                // Mejorar mensajes específicos de error
+                if (errorMsg.includes('Duplicate entry') && errorMsg.includes('numero_servicio')) {
+                    errorMsg = 'Error interno del sistema al generar el número de servicio. Por favor, contacte al administrador.';
+                } else if (errorMsg.includes('constraint')) {
+                    errorMsg = 'Error de validación: Algunos datos no cumplen con los requisitos del sistema.';
+                } else if (errorMsg.includes('foreign key')) {
+                    errorMsg = 'Error: El contribuyente seleccionado no es válido.';
+                } else if (errorMsg.includes('not null')) {
+                    errorMsg = 'Error: Faltan campos obligatorios por completar.';
+                }
+                
+                throw new Error(errorMsg);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showLoading(false);
+        showToast('Error al crear servicio: ' + error.message, 'error');
+    });
+}
+
+function actualizarServicio(id) {
+    const form = document.getElementById('servicioForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Validaciones adicionales
+    if (!data.contribuyenteId) {
+        showToast('Debe seleccionar un contribuyente', 'error');
+        return;
+    }
+    
+    // Asegurar que los campos numéricos estén presentes y sean válidos
+    data.tarifaBase = parseFloat(data.tarifaBase) || 0;
+    data.montoFacturado = parseFloat(data.montoFacturado) || data.tarifaBase;
+    data.saldoPendiente = parseFloat(data.saldoPendiente) || data.tarifaBase;
+    
+    // Asegurar que los campos de texto no sean null
+    data.medidor = data.medidor || '';
+    data.direccionServicio = data.direccionServicio || '';
+    data.observaciones = data.observaciones || '';
+    
+    // Convertir contribuyenteId a número
+    data.contribuyenteId = parseInt(data.contribuyenteId);
+    
+    // Agregar el ID del servicio
+    data.id = parseInt(id);
+    
+    // Agregar campos adicionales que el backend espera (si no existen)
+    if (!data.consumoActual) data.consumoActual = 0;
+    if (!data.consumoAnterior) data.consumoAnterior = 0;
+    if (!data.montoPagado) data.montoPagado = 0;
+    if (!data.fechaModificacion) data.fechaModificacion = new Date().toISOString().split('T')[0];
+    
+    console.log('Datos a actualizar:', data);
+    
+    showLoading(true);
+    fetch(`/servicios/api/${id}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            showLoading(false);
+            actualizarSinRecargar('Servicio actualizado exitosamente');
+        } else {
+            return response.text().then(text => {
+                let errorMsg = 'Error al actualizar el servicio';
+                try {
+                    const errorObj = JSON.parse(text);
+                    errorMsg = errorObj.error || errorObj.message || errorMsg;
+                } catch (e) {
+                    errorMsg = text || `HTTP ${response.status}: ${response.statusText}`;
+                }
+                
+                // Mejorar mensajes específicos de error
+                if (errorMsg.includes('Duplicate entry') && errorMsg.includes('numero_servicio')) {
+                    errorMsg = 'El número de servicio ya existe. No se puede duplicar.';
+                } else if (errorMsg.includes('constraint')) {
+                    errorMsg = 'Error de validación: Algunos datos no cumplen con los requisitos del sistema.';
+                } else if (errorMsg.includes('foreign key')) {
+                    errorMsg = 'Error: El contribuyente seleccionado no es válido.';
+                } else if (errorMsg.includes('not null')) {
+                    errorMsg = 'Error: Faltan campos obligatorios por completar.';
+                } else if (errorMsg.includes('BigDecimal') && errorMsg.includes('null')) {
+                    errorMsg = 'Error: Los montos deben tener valores válidos.';
+                }
+                
+                throw new Error(errorMsg);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showLoading(false);
+        showToast('Error al actualizar servicio: ' + error.message, 'error');
+    });
+}
+
+function procesarPagoServicio(servicioId) {
+    const form = document.getElementById('pagoForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    data.servicioId = servicioId;
+    
+    // Validaciones adicionales
+    if (parseFloat(data.monto) <= 0) {
+        showToast('El monto debe ser mayor a 0', 'error');
+        return;
+    }
+    
+    showLoading(true);
+    fetch(`/servicios/api/${servicioId}/pago`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            showLoading(false);
+            actualizarSinRecargar('Pago procesado exitosamente');
+        } else {
+            return response.text().then(text => {
+                let errorMsg = 'Error al procesar el pago';
+                try {
+                    const errorObj = JSON.parse(text);
+                    errorMsg = errorObj.error || errorObj.message || errorMsg;
+                } catch (e) {
+                    errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorMsg);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showLoading(false);
+        showToast('Error al procesar pago: ' + error.message, 'error');
+    });
+}
+
+// Función para mostrar/ocultar indicador de carga
+function showLoading(show) {
+    const buttons = document.querySelectorAll('.modal-submit, .btn-modern');
+    buttons.forEach(btn => {
+        if (show) {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+        }
+    });
+    
+    // Mostrar spinner en el botón principal del modal
+    const submitBtn = document.querySelector('.modal-submit');
+    if (submitBtn) {
+        if (show) {
+            submitBtn.innerHTML = '<span class="spinner"></span> Procesando...';
+        } else {
+            submitBtn.innerHTML = 'Guardar';
+        }
+    }
+}
+
+// Funciones auxiliares para cargar datos
+function cargarContribuyentes() {
+    // Intentar múltiples endpoints para contribuyentes
+    const endpoints = [
+        '/api/contribuyentes',
+        '/tributario/contribuyentes/api',
+        '/contribuyentes/api'
+    ];
+    
+    async function intentarCargar(urls) {
+        for (const url of urls) {
+            try {
+                const response = await fetch(url, {
+                    headers: getHeaders()
+                });
+                
+                if (response.ok) {
+                    const contribuyentes = await response.json();
+                    return contribuyentes;
+                }
+            } catch (error) {
+                console.log(`Endpoint ${url} no disponible:`, error.message);
+            }
+        }
+        throw new Error('No se pudo conectar con ningún endpoint de contribuyentes');
+    }
+    
+    intentarCargar(endpoints)
+    .then(contribuyentes => {
+        const select = document.getElementById('editContribuyenteId');
+        if (select) {
+            // Limpiar opciones existentes (excepto la primera)
+            while (select.children.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+            
+            // Si no hay contribuyentes, agregar opciones de ejemplo
+            if (!contribuyentes || contribuyentes.length === 0) {
+                const contribuyentesEjemplo = [
+                    { id: 1, razonSocial: 'Empresa Ejemplo C.A.', rif: 'J-12345678-9' },
+                    { id: 2, razonSocial: 'Comercial Demo S.R.L.', rif: 'J-87654321-0' },
+                    { id: 3, razonSocial: 'Juan Pérez', rif: 'V-12345678-9' }
+                ];
+                contribuyentesEjemplo.forEach(contrib => {
+                    const option = document.createElement('option');
+                    option.value = contrib.id;
+                    option.textContent = `${contrib.razonSocial} (${contrib.rif})`;
+                    select.appendChild(option);
+                });
+                showToast('Usando contribuyentes de ejemplo - Configurar endpoint en producción', 'info');
+            } else {
+                contribuyentes.forEach(contrib => {
+                    const option = document.createElement('option');
+                    option.value = contrib.id;
+                    option.textContent = `${contrib.razonSocial || contrib.nombre || contrib.denominacion} (${contrib.rif})`;
+                    select.appendChild(option);
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error al cargar contribuyentes:', error);
+        
+        // Como fallback, agregar contribuyentes de ejemplo
+        const select = document.getElementById('editContribuyenteId');
+        if (select) {
+            // Limpiar opciones existentes (excepto la primera)
+            while (select.children.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+            
+            const contribuyentesEjemplo = [
+                { id: 1, razonSocial: 'Sumidistribuciones C.A.', rif: 'J-12345678-9' },
+                { id: 2, razonSocial: 'Constructora del Norte C.A.', rif: 'J-20987654-1' },
+                { id: 3, razonSocial: 'Juan Carlos Pérez López', rif: 'V-10123456-1' },
+                { id: 4, razonSocial: 'Sinumatek Solutions', rif: 'V-17456789-8' }
+            ];
+            
+            contribuyentesEjemplo.forEach(contrib => {
+                const option = document.createElement('option');
+                option.value = contrib.id;
+                option.textContent = `${contrib.razonSocial} (${contrib.rif})`;
+                select.appendChild(option);
+            });
+        }
+        
+        showToast('Usando contribuyentes de ejemplo - Verificar configuración del servidor', 'info');
+    });
+}
+
+function cargarContribuyentesEditar() {
+    cargarContribuyentes();
+}
+
+// Función para calcular saldo pendiente automáticamente
+function calcularSaldoPendiente() {
+    const montoFacturado = parseFloat(document.querySelector('input[name="montoFacturado"]')?.value) || 0;
+    const saldoPendienteInput = document.querySelector('input[name="saldoPendiente"]');
+    
+    if (saldoPendienteInput) {
+        // Si no hay monto facturado, el saldo pendiente es igual a la tarifa base
+        const tarifaBase = parseFloat(document.querySelector('input[name="tarifaBase"]')?.value) || 0;
+        const saldoPendiente = montoFacturado > 0 ? montoFacturado : tarifaBase;
+        saldoPendienteInput.value = saldoPendiente.toFixed(2);
+    }
+}
+
+// Función para mostrar notificaciones toast
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        console.error('No se encontró el contenedor de toast');
+        return;
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.style.cssText = `
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#f59e0b'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideIn 0.3s ease-out;
+        min-width: 300px;
+        font-weight: 500;
+    `;
+    
+    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+    toast.innerHTML = `
+        <span style="font-size:16px">${icon}</span>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 4000);
+}
+
+// Función para recargar la tabla dinámicamente
+function recargarTabla() {
+    fetch('/servicios', {
+        headers: getHeaders()
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.text();
+    })
+    .then(html => {
+        // Crear un documento temporal para extraer solo la tabla
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const nuevaTabla = doc.querySelector('.fullscreen-table tbody');
+        const nuevasEstadisticas = doc.querySelectorAll('.stat-card');
+        
+        if (nuevaTabla) {
+            // Actualizar tabla
+            const tablaActual = document.querySelector('.fullscreen-table tbody');
+            if (tablaActual) {
+                tablaActual.innerHTML = nuevaTabla.innerHTML;
+            }
+        }
+        
+        if (nuevasEstadisticas.length > 0) {
+            // Actualizar estadísticas
+            const estadisticasActuales = document.querySelectorAll('.stat-card');
+            nuevasEstadisticas.forEach((nueva, index) => {
+                if (estadisticasActuales[index]) {
+                    estadisticasActuales[index].innerHTML = nueva.innerHTML;
+                }
+            });
+        }
+        
+        showToast('Datos actualizados correctamente', 'success');
+    })
+    .catch(error => {
+        console.error('Error al recargar datos:', error);
+        // En lugar de mostrar error, hacer un refresh completo como fallback
+        console.log('Intentando recarga completa de página...');
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    });
+}
+
+// Función para actualizar operaciones sin recargar página
+function actualizarSinRecargar(mensaje, callback) {
+    showToast(mensaje, 'success');
+    closeModal();
+    
+    // Recargar datos después de un breve delay
+    setTimeout(() => {
+        recargarTabla();
+        if (callback) callback();
+    }, 1000);
+}
+
+// Función mejorada para cerrar modal
+function closeModal() {
+    const modal = document.querySelector('.modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
+    // Limpiar formularios
+    const forms = document.querySelectorAll('#servicioForm, #pagoForm');
+    forms.forEach(form => {
+        if (form) form.reset();
+    });
+    
+    // Restaurar botones
+    showLoading(false);
+}
+
+// Función para validar formularios
+function validarFormulario(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return false;
+    
+    const inputs = form.querySelectorAll('input[required], select[required]');
+    let valido = true;
+    
+    inputs.forEach(input => {
+        if (!input.value.trim()) {
+            input.style.borderColor = '#dc3545';
+            valido = false;
+        } else {
+            input.style.borderColor = '';
+        }
+    });
+    
+    return valido;
+}
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Página de servicios cargada correctamente');
+    
+    // Agregar event listeners para filtros
+    const buscarInput = document.getElementById('buscarServicio');
+    const filtroEstado = document.getElementById('filtroEstado');
+    const filtroTipo = document.getElementById('filtroTipo');
+    
+    if (buscarInput) {
+        buscarInput.addEventListener('input', filtrarServicios);
+    }
+    
+    if (filtroEstado) {
+        filtroEstado.addEventListener('change', filtrarServicios);
+    }
+    
+    if (filtroTipo) {
+        filtroTipo.addEventListener('change', filtrarServicios);
+    }
+    
+});
+
+// Función para filtrar servicios en tiempo real
+function filtrarServicios() {
+    const buscar = document.getElementById('buscarServicio')?.value.toLowerCase() || '';
+    const estado = document.getElementById('filtroEstado')?.value || '';
+    const tipo = document.getElementById('filtroTipo')?.value || '';
+    
+    const filas = document.querySelectorAll('.fullscreen-table tbody tr');
+    
+    filas.forEach(fila => {
+        if (fila.cells.length < 7) return; // Skip empty rows
+        
+        const numero = fila.cells[0].textContent.toLowerCase();
+        const contribuyente = fila.cells[1].textContent.toLowerCase();
+        const tipoServicio = fila.cells[2].textContent;
+        const estadoServicio = fila.cells[4].textContent.trim();
+        
+        const coincideBusqueda = numero.includes(buscar) || contribuyente.includes(buscar);
+        const coincideEstado = !estado || estadoServicio === estado;
+        const coincideTipo = !tipo || tipoServicio.includes(tipo);
+        
+        if (coincideBusqueda && coincideEstado && coincideTipo) {
+            fila.style.display = '';
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+}
+
+/*]]>*/
+</script>
+</body>
+</html>

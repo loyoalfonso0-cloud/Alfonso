@@ -1,0 +1,286 @@
+/* ========================================
+   SISTEMA DE ICONOS MODERNOS
+   Sistema Tributario Empresarial v2.0
+   ======================================== */
+
+/* Estilos base para iconos SVG */
+.icon-svg {
+    display: inline-block;
+    vertical-align: middle;
+    transition: all 0.2s ease;
+}
+
+/* Iconos de títulos principales - por defecto blanco para modo oscuro */
+.page-title-icon {
+    transition: color 0.3s ease;
+    color: #ffffff; /* Blanco por defecto para modo oscuro */
+}
+
+/* Iconos por defecto - blanco para modo oscuro */
+h2 svg {
+    color: #ffffff;
+    transition: color 0.3s ease;
+}
+
+/* Iconos en navegación */
+.nav-icon svg {
+    color: inherit;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-link:hover .nav-icon svg {
+    transform: scale(1.1);
+    filter: drop-shadow(0 2px 4px rgba(139, 92, 246, 0.3));
+}
+
+/* Iconos en botones */
+.btn svg {
+    vertical-align: middle;
+    transition: all 0.2s ease;
+}
+
+.btn:hover svg {
+    transform: scale(1.05);
+}
+
+/* Iconos de acciones específicas */
+.btn-info svg {
+    color: #3b82f6;
+}
+
+.btn-secondary svg {
+    color: #6b7280;
+}
+
+.btn-primary svg {
+    color: #8b5cf6;
+}
+
+.btn-success svg {
+    color: #10b981;
+}
+
+.btn-danger svg {
+    color: #ef4444;
+}
+
+.btn-warning svg {
+    color: #f59e0b;
+}
+
+/* Efectos hover para botones de acción */
+.btn-info:hover svg {
+    color: #ffffff;
+    filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.4));
+}
+
+.btn-secondary:hover svg {
+    color: #ffffff;
+    filter: drop-shadow(0 2px 4px rgba(107, 114, 128, 0.4));
+}
+
+.btn-primary:hover svg {
+    color: #ffffff;
+    filter: drop-shadow(0 2px 4px rgba(139, 92, 246, 0.4));
+}
+
+.btn-success:hover svg {
+    color: #ffffff;
+    filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.4));
+}
+
+.btn-danger:hover svg {
+    color: #ffffff;
+    filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.4));
+}
+
+.btn-warning:hover svg {
+    color: #ffffff;
+    filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4));
+}
+
+/* Iconos en títulos */
+.page-title svg {
+    margin-right: 12px;
+    filter: drop-shadow(0 2px 4px rgba(139, 92, 246, 0.3));
+}
+
+/* Iconos en estadísticas */
+.stat-icon svg {
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-icon svg {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Iconos en modales */
+.modal-header svg {
+    margin-right: 8px;
+    color: var(--primary);
+}
+
+/* Iconos en formularios */
+.form-icon svg {
+    color: #6b7280;
+    margin-right: 8px;
+}
+
+/* Animaciones para iconos de carga */
+.icon-loading {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Iconos responsivos */
+@media (max-width: 768px) {
+    .nav-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .btn svg {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .page-title svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* Tema claro - iconos en negro */
+.light-mode .nav-icon svg {
+    color: #1f2937 !important;
+}
+
+.light-mode .btn svg {
+    opacity: 0.9;
+}
+
+.light-mode .btn:hover svg {
+    opacity: 1;
+}
+
+.light-mode h2 svg {
+    color: #1f2937 !important;
+}
+
+.light-mode .page-title svg,
+.light-mode .page-title-icon {
+    color: #1f2937 !important;
+}
+
+/* Tema oscuro - iconos en blanco (cuando NO hay .light-mode) */
+body:not(.light-mode) .nav-icon svg {
+    color: #ffffff !important;
+}
+
+body:not(.light-mode) .btn svg {
+    opacity: 0.95;
+}
+
+body:not(.light-mode) h2 svg {
+    color: #ffffff !important;
+}
+
+body:not(.light-mode) .page-title svg,
+body:not(.light-mode) .page-title-icon {
+    color: #ffffff !important;
+}
+
+/* También mantener compatibilidad con .dark-mode si se usa */
+.dark-mode .nav-icon svg {
+    color: #ffffff !important;
+}
+
+.dark-mode .btn svg {
+    opacity: 0.95;
+}
+
+.dark-mode h2 svg {
+    color: #ffffff !important;
+}
+
+.dark-mode .page-title svg,
+.dark-mode .page-title-icon {
+    color: #ffffff !important;
+}
+
+/* Panel tributario - iconos con tema inverso */
+.tributario-panel .nav-icon svg {
+    color: #8b5cf6 !important;
+    filter: drop-shadow(0 1px 2px rgba(139, 92, 246, 0.2));
+}
+
+.tributario-panel .btn svg {
+    filter: brightness(1.1);
+}
+
+.tributario-panel .page-title svg,
+.tributario-panel .page-title-icon {
+    color: #8b5cf6 !important;
+    filter: drop-shadow(0 2px 6px rgba(139, 92, 246, 0.4));
+}
+
+/* Asegurar especificidad para iconos en modo oscuro */
+body:not(.light-mode) .page-title-icon {
+    color: #ffffff !important;
+}
+
+body:not(.light-mode) h2 svg {
+    color: #ffffff !important;
+}
+
+/* Estados especiales para iconos */
+.icon-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.icon-active {
+    color: var(--primary) !important;
+    filter: drop-shadow(0 2px 4px rgba(139, 92, 246, 0.3));
+}
+
+/* Iconos de estado */
+.status-icon-success svg {
+    color: #10b981;
+}
+
+.status-icon-warning svg {
+    color: #f59e0b;
+}
+
+.status-icon-error svg {
+    color: #ef4444;
+}
+
+.status-icon-info svg {
+    color: #3b82f6;
+}
+
+/* Efectos de pulsación para iconos clickeables */
+.icon-clickable {
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.icon-clickable:active {
+    transform: scale(0.95);
+}
+
+/* Iconos en tooltips */
+.tooltip-icon svg {
+    width: 16px;
+    height: 16px;
+    color: #6b7280;
+    margin-left: 4px;
+}

@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Gestión de Pagos - Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons-professional.css}">
+    <link rel="stylesheet" th:href="@{/css/icons.css}">
+    <script th:src="@{/js/theme.js}"></script>
+    <style>
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            color: #1f2937;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header -->
+        <div class="fullscreen-header">
+            <h2 style="margin:0;color:#e2e8f0;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="page-title-icon">
+                    <rect x="1" y="3" width="15" height="13"/>
+                    <path d="m16 8 2 2-2 2"/>
+                    <path d="M21 12H7"/>
+                    <path d="M7 8v8"/>
+                </svg>
+                Gestión de Pagos
+            </h2>
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="btn-modern btn-modern-success" sec:authorize="hasAnyAuthority('PAGOS_WRITE','PAGOS_GESTIONAR')" onclick="abrirModalNuevoPago()" title="Crear nuevo pago">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nuevo Pago
+                </button>
+                <button class="btn-modern btn-modern-export icon-button" onclick="exportarPagos()" title="Exportar lista de pagos">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${success}" class="alert alert-success" style="margin-bottom:20px">
+            <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger" style="margin-bottom:20px">
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Contenido con scroll -->
+        <div class="fullscreen-content">
+            <!-- Estadísticas rápidas -->
+            <div class="fullscreen-stats">
+                <div class="stat-card" style="border-left:4px solid #8b5cf6">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Total Pagos</div>
+                    <div style="font-size:32px;font-weight:700;color:#8b5cf6" th:text="${pagos.totalElements}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #10b981">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Pagos del Día</div>
+                    <div style="font-size:32px;font-weight:700;color:#10b981" th:text="${#lists.size(pagosDelDia)}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #f59e0b">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Pagos Recientes</div>
+                    <div style="font-size:32px;font-weight:700;color:#f59e0b" th:text="${#lists.size(pagosRecientes)}">0</div>
+                </div>
+            </div>
+
+        <!-- Tabla de pagos -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Lista de Pagos</h3>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Contribuyente</th>
+                            <th>Concepto</th>
+                            <th>Monto</th>
+                            <th>Método</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pago : ${pagos.content}" th:if="${not #lists.isEmpty(pagos.content)}">
+                            <td th:text="${pago.id}">1</td>
+                            <td>
+                                <div style="font-weight:600" th:text="${pago.contribuyenteNombre}">Nombre</div>
+                                <div style="font-size:12px;color:#64748b" th:text="${pago.contribuyenteRif}">RIF</div>
+                            </td>
+                            <td th:text="${pago.concepto}">Concepto</td>
+                            <td>
+                                <span style="font-weight:600;color:#10b981" th:text="${#numbers.formatDecimal(pago.monto, 1, 2)}">0.00</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-primary" th:text="${pago.metodoPagoDescripcion}">Método</span>
+                            </td>
+                            <td>
+                                <span th:class="${'badge ' + (pago.estado.name() == 'CONFIRMADO' ? 'badge-success' : 
+                                                            pago.estado.name() == 'PROCESADO' ? 'badge-warning' : 
+                                                            pago.estado.name() == 'PENDIENTE' ? 'badge-primary' : 
+                                                            'badge-danger')}" 
+                                      th:text="${pago.estadoDescripcion}">Estado</span>
+                            </td>
+                            <td th:text="${#temporals.format(pago.fechaPago, 'dd/MM/yyyy HH:mm')}">Fecha</td>
+                            <td>
+                                <div style="display:flex;gap:8px;align-items:center">
+                                    <button style="width:32px;height:32px;border-radius:8px;border:none;background:#f8fafc;color:#64748b;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.1)" 
+                                            th:onclick="'verPago(' + ${pago.id} + ')'" title="Ver detalle">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </button>
+                                    
+                                    <button style="width:32px;height:32px;border-radius:8px;border:none;background:#f97316;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.1)" 
+                                            th:onclick="'editarPago(' + ${pago.id} + ')'" 
+                                            title="Editar pago"
+                                            sec:authorize="hasAnyAuthority('PAGOS_WRITE','PAGOS_GESTIONAR')">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                    </button>
+                                    
+                                    <button th:if="${pago.estado.name() == 'PENDIENTE'}" 
+                                            style="width:32px;height:32px;border-radius:8px;border:none;background:#10b981;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.1)"
+                                            th:onclick="'procesarPago(' + ${pago.id} + ')'" 
+                                            title="Procesar pago"
+                                            sec:authorize="hasAnyAuthority('PAGOS_WRITE','PAGOS_GESTIONAR')">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20,6 9,17 4,12"/>
+                                        </svg>
+                                    </button>
+                                    
+                                    <button th:if="${pago.estado.name() == 'PROCESADO'}" 
+                                            style="width:32px;height:32px;border-radius:8px;border:none;background:#10b981;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.1)"
+                                            th:onclick="'confirmarPago(' + ${pago.id} + ')'" 
+                                            title="Confirmar pago"
+                                            sec:authorize="hasAnyAuthority('PAGOS_WRITE','PAGOS_GESTIONAR')">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                            <polyline points="22,4 12,14.01 9,11.01"/>
+                                        </svg>
+                                    </button>
+                                    
+                                    <button th:if="${pago.estado.name() != 'CONFIRMADO'}" 
+                                            style="width:32px;height:32px;border-radius:8px;border:none;background:#ef4444;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.1)"
+                                            th:onclick="'anularPago(' + ${pago.id} + ')'" 
+                                            title="Eliminar pago"
+                                            sec:authorize="hasAnyAuthority('PAGOS_WRITE','PAGOS_GESTIONAR')">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M3 6h18"/>
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(pagos.content)}">
+                            <td colspan="8" style="text-align:center;padding:40px;color:#64748b">
+                                No hay pagos registrados
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <div th:if="${pagos.totalPages > 1}" style="padding:20px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:8px">
+                <a th:if="${currentPage > 0}" 
+                   th:href="@{/pagos(page=${currentPage - 1})}" 
+                   class="btn btn-sm btn-secondary">Anterior</a>
+                
+                <span style="padding:8px 16px;color:#64748b">
+                    Página <span th:text="${currentPage + 1}">1</span> de <span th:text="${totalPages}">1</span>
+                </span>
+                
+                <a th:if="${currentPage < totalPages - 1}" 
+                   th:href="@{/pagos(page=${currentPage + 1})}" 
+                   class="btn btn-sm btn-secondary">Siguiente</a>
+            </div>
+        </div>
+        </div>
+    </main>
+</div>
+
+<!-- Incluir modales -->
+<div th:replace="fragments/modals :: body"></div>
+
+
+<script>
+function verPago(id) {
+    // Cargar datos del pago y mostrar en modal
+    fetch(`/pagos/api/${id}`)
+        .then(response => response.json())
+        .then(pago => {
+            const modalTitle = `
+                <div style="display:flex;align-items:center;gap:8px">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#8b5cf6">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Detalle del Pago #${pago.id}
+                </div>
+            `;
+            
+            const modalContent = getPagoDetailContent(pago);
+            openModal(modalTitle, modalContent, null); // Sin botón de submit
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los detalles del pago');
+        });
+}
+
+function getPagoDetailContent(pago) {
+    return `
+        <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="form-group">
+                <label class="form-label">Contribuyente</label>
+                <div style="padding:8px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;color:var(--text)">
+                    ${pago.contribuyenteNombre} (${pago.contribuyenteRif})
+                </div>
+            </div>
+            
+            ${pago.declaracionId ? `
+            <div class="form-group">
+                <label class="form-label">Declaración Asociada</label>
+                <div style="padding:8px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;color:var(--text)">
+                    Declaración #${pago.declaracionId}
+                </div>
+            </div>
+            ` : ''}
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div class="form-group">
+                    <label class="form-label">Monto</label>
+                    <div style="padding:8px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;color:#10b981;font-weight:600;font-size:16px">
+                        $${pago.monto.toFixed(2)}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+                    <div style="padding:8px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px">
+                        <span class="badge ${pago.estado === 'CONFIRMADO' ? 'badge-success' : 
+                                            pago.estado === 'PROCESADO' ? 'badge-warning' : 
+                                            pago.estado === 'PENDIENTE' ? 'badge-primary' : 
+                                            'badge-danger'}">
+                            ${pago.estadoDescripcion}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div class="form-group">
+                    <label class="form-label">Método de Pago</label>
+                    <div style="padding:8px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;color:var(--text)">
+                        ${pago.metodoPagoDescripcion}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Fecha de Pago</label>
+                    <div style="padding:8px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;color:var(--text)">
+                        ${new Date(pago.fechaPago).toLocaleString('es-ES')}
+                    </div>
+                </div>
+            </div>
+            
+            ${pago.referencia ? `
+            <div class="form-group">
+                <label class="form-label">Referencia</label>
+                <div style="padding:8px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;color:var(--text)">
+                    ${pago.referencia}
+                </div>
+            </div>
+            ` : ''}
+            
+            <div class="form-group">
+                <label class="form-label">Concepto</label>
+                <div style="padding:8px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;color:var(--text)">
+                    ${pago.concepto}
+                </div>
+            </div>
+            
+            ${pago.usuarioRegistro ? `
+            <div class="form-group">
+                <label class="form-label">Registrado por</label>
+                <div style="padding:8px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;color:var(--text)">
+                    ${pago.usuarioRegistro}
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function editarPago(id) {
+    // Cargar datos del pago para edición
+    fetch(`/pagos/api/${id}`)
+        .then(response => response.json())
+        .then(pago => {
+            const modalTitle = `
+                <div style="display:flex;align-items:center;gap:8px">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#f97316">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Editar Pago #${pago.id}
+                </div>
+            `;
+            
+            const modalContent = getPagoEditForm(pago);
+            openModal(modalTitle, modalContent, () => actualizarPago(id));
+            
+            // Cargar datos después de abrir el modal
+            setTimeout(() => {
+                cargarContribuyentes();
+                cargarMultas();
+                // Preseleccionar valores
+                document.getElementById('contribuyenteId').value = pago.contribuyenteId;
+                document.getElementById('multaId').value = pago.multaId || '';
+                document.getElementById('tipoPago').value = pago.tipoPago || 'OTRO';
+                document.getElementById('monto').value = pago.monto;
+                document.getElementById('metodoPago').value = pago.metodoPago;
+                document.getElementById('referencia').value = pago.referencia || '';
+                document.getElementById('concepto').value = pago.concepto;
+            }, 200);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los datos del pago');
+        });
+}
+
+function getPagoEditForm(pago) {
+    return `
+        <form id="pagoEditForm">
+            <input type="hidden" id="pagoId" value="${pago.id}">
+            
+            <div class="form-group">
+                <label class="form-label">Contribuyente *</label>
+                <select id="contribuyenteId" name="contribuyenteId" class="form-control" required>
+                    <option value="">Seleccione un contribuyente</option>
+                </select>
+                <small class="form-text text-muted">Se auto-completa al seleccionar una multa</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Multa (Opcional)</label>
+                <select id="multaId" name="multaId" class="form-control">
+                    <option value="">Seleccione una multa</option>
+                </select>
+                <small class="form-text text-muted">Si el pago es para una multa específica, selecciónela aquí</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Tipo de Pago *</label>
+                <select id="tipoPago" name="tipoPago" class="form-control" required>
+                    <option value="">Seleccione tipo de pago</option>
+                    <option value="MULTA">Multa</option>
+                    <option value="TASA">Tasa Municipal</option>
+                    <option value="SERVICIO">Servicio</option>
+                    <option value="ANTICIPO">Anticipo de Impuesto</option>
+                    <option value="INTERES">Intereses</option>
+                    <option value="OTRO">Otro</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Monto *</label>
+                <input type="number" id="monto" name="monto" class="form-control" step="0.01" min="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Método de Pago *</label>
+                <select id="metodoPago" name="metodoPago" class="form-control" required>
+                    <option value="">Seleccione método de pago</option>
+                    <option value="EFECTIVO">Efectivo</option>
+                    <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                    <option value="CHEQUE">Cheque</option>
+                    <option value="TARJETA_DEBITO">Tarjeta de Débito</option>
+                    <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+                    <option value="PAGO_MOVIL">Pago Móvil</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Referencia</label>
+                <input type="text" id="referencia" name="referencia" class="form-control" maxlength="100" placeholder="Número de transacción, cheque, etc.">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Concepto *</label>
+                <textarea id="concepto" name="concepto" class="form-control" required maxlength="200" rows="2" placeholder="Descripción detallada del pago"></textarea>
+            </div>
+        </form>
+    `;
+}
+
+function actualizarPago(id) {
+    const form = document.getElementById('pagoEditForm');
+    const formData = new FormData(form);
+    
+    // Deshabilitar botón y mostrar carga
+    const btn = document.querySelector('.modal-submit');
+    btn.disabled = true;
+    btn.textContent = 'Actualizando...';
+    
+    // Validar campos requeridos
+    if (!formData.get('contribuyenteId')) {
+        alert('Debe seleccionar un contribuyente');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('tipoPago')) {
+        alert('Debe seleccionar un tipo de pago');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('monto') || parseFloat(formData.get('monto')) <= 0) {
+        alert('Debe ingresar un monto válido mayor a 0');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('metodoPago')) {
+        alert('Debe seleccionar un método de pago');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('concepto')) {
+        alert('Debe ingresar un concepto para el pago');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    
+    const pagoData = {
+        contribuyenteId: parseInt(formData.get('contribuyenteId')),
+        multaId: formData.get('multaId') ? parseInt(formData.get('multaId')) : null,
+        tipoPago: formData.get('tipoPago'),
+        monto: parseFloat(formData.get('monto')),
+        metodoPago: formData.get('metodoPago'),
+        referencia: formData.get('referencia') || '',
+        concepto: formData.get('concepto')
+    };
+    
+    // Obtener token CSRF
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+    
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+    }
+    
+    fetch(`/pagos/api/${id}`, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify(pagoData)
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            return response.text().then(text => {
+                throw new Error(text || 'Error al actualizar el pago');
+            });
+        }
+    })
+    .then(data => {
+        closeModal();
+        alert('Pago actualizado exitosamente');
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el pago: ' + error.message);
+    })
+    .finally(() => {
+        // Restaurar botón
+        const btn = document.querySelector('.modal-submit');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Guardar';
+        }
+    });
+}
+
+function procesarPago(id) {
+    openConfirmModal('¿Está seguro de procesar este pago?', () => {
+        // Obtener token CSRF
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+        
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader] = csrfToken;
+        }
+        
+        fetch('/pagos/api/' + id + '/procesar', {
+            method: 'PUT',
+            headers: headers
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Pago procesado exitosamente');
+                location.reload();
+            } else {
+                alert('Error al procesar el pago');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al procesar el pago');
+        });
+    });
+}
+
+function confirmarPago(id) {
+    openConfirmModal('¿Está seguro de confirmar este pago?', () => {
+        // Obtener token CSRF
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+        
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader] = csrfToken;
+        }
+        
+        fetch('/pagos/api/' + id + '/confirmar', {
+            method: 'PUT',
+            headers: headers
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Pago confirmado exitosamente');
+                location.reload();
+            } else {
+                alert('Error al confirmar el pago');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al confirmar el pago');
+        });
+    });
+}
+
+function anularPago(id) {
+    openConfirmModal('¿Está seguro de anular este pago? Esta acción no se puede deshacer.', () => {
+        // Obtener token CSRF
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+        
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader] = csrfToken;
+        }
+        
+        fetch('/pagos/api/' + id + '/anular', {
+            method: 'PUT',
+            headers: headers
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Pago anulado exitosamente');
+                location.reload();
+            } else {
+                alert('Error al anular el pago');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al anular el pago');
+        });
+    });
+}
+
+function exportarPagos() {
+    window.location.href = '/pagos/exportar';
+}
+
+function abrirModalNuevoPago() {
+    const modalTitle = `
+        <div style="display:flex;align-items:center;gap:8px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#8b5cf6">
+                <rect x="1" y="3" width="15" height="13"/>
+                <path d="m16 8 2 2-2 2"/>
+                <path d="M21 12H7"/>
+                <path d="M7 8v8"/>
+            </svg>
+            Nuevo Pago
+        </div>
+    `;
+    
+    const formContent = getPagoForm();
+    openModal(modalTitle, formContent, guardarPago);
+    
+    // Cargar datos después de abrir el modal
+    setTimeout(() => {
+        cargarContribuyentes();
+        cargarMultas();
+    }, 100);
+}
+
+function getPagoForm() {
+    return `
+        <form id="pagoForm">
+            <div class="form-group">
+                <label class="form-label">Contribuyente *</label>
+                <select id="contribuyenteId" name="contribuyenteId" class="form-control" required>
+                    <option value="">Seleccione un contribuyente</option>
+                </select>
+                <small class="form-text text-muted">Se auto-completa al seleccionar una multa</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Multa (Opcional)</label>
+                <select id="multaId" name="multaId" class="form-control">
+                    <option value="">Seleccione una multa</option>
+                </select>
+                <small class="form-text text-muted">Si el pago es para una multa específica, selecciónela aquí</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Tipo de Pago *</label>
+                <select id="tipoPago" name="tipoPago" class="form-control" required>
+                    <option value="">Seleccione tipo de pago</option>
+                    <option value="MULTA">Multa</option>
+                    <option value="TASA">Tasa Municipal</option>
+                    <option value="SERVICIO">Servicio</option>
+                    <option value="ANTICIPO">Anticipo de Impuesto</option>
+                    <option value="INTERES">Intereses</option>
+                    <option value="OTRO">Otro</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Monto *</label>
+                <input type="number" id="monto" name="monto" class="form-control" step="0.01" min="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Método de Pago *</label>
+                <select id="metodoPago" name="metodoPago" class="form-control" required>
+                    <option value="">Seleccione método de pago</option>
+                    <option value="EFECTIVO">Efectivo</option>
+                    <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                    <option value="CHEQUE">Cheque</option>
+                    <option value="TARJETA_DEBITO">Tarjeta de Débito</option>
+                    <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+                    <option value="PAGO_MOVIL">Pago Móvil</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Referencia</label>
+                <input type="text" id="referencia" name="referencia" class="form-control" maxlength="100" placeholder="Número de transacción, cheque, etc.">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Concepto *</label>
+                <textarea id="concepto" name="concepto" class="form-control" required maxlength="200" rows="2" placeholder="Descripción detallada del pago"></textarea>
+            </div>
+        </form>
+    `;
+}
+
+function cargarContribuyentes() {
+    fetch('/api/contribuyentes')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('contribuyenteId');
+            select.innerHTML = '<option value="">Seleccione un contribuyente</option>';
+            data.forEach(contribuyente => {
+                const option = document.createElement('option');
+                option.value = contribuyente.id;
+                option.textContent = `${contribuyente.razonSocial} (${contribuyente.rif})`;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error cargando contribuyentes:', error);
+            alert('Error al cargar contribuyentes: ' + error.message);
+        });
+}
+
+function cargarMultas() {
+    fetch('/multas/api?estado=PENDIENTE,PARCIALMENTE_PAGADA,VENCIDA')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('multaId');
+            if (select) {
+                select.innerHTML = '<option value="">Seleccione una multa</option>';
+                // Si data es una página, usar data.content, sino usar data directamente
+                const multas = data.content || data;
+                
+                // Guardar datos de multas para auto-completar contribuyente
+                window.multasData = {};
+                
+                multas.forEach(multa => {
+                    const option = document.createElement('option');
+                    option.value = multa.id;
+                    option.textContent = `${multa.numeroMulta} - ${multa.contribuyenteNombre} ($${multa.saldoPendiente.toFixed(2)})`;
+                    select.appendChild(option);
+                    
+                    // Guardar datos de la multa para uso posterior
+                    window.multasData[multa.id] = {
+                        contribuyenteId: multa.contribuyenteId,
+                        contribuyenteNombre: multa.contribuyenteNombre,
+                        saldoPendiente: multa.saldoPendiente,
+                        numeroMulta: multa.numeroMulta
+                    };
+                });
+                
+                // Agregar evento para auto-completar contribuyente cuando se selecciona una multa
+                select.addEventListener('change', function() {
+                    const multaId = this.value;
+                    const contribuyenteSelect = document.getElementById('contribuyenteId');
+                    const montoInput = document.getElementById('monto');
+                    
+                    if (multaId && window.multasData[multaId]) {
+                        const multaData = window.multasData[multaId];
+                        
+                        // Auto-seleccionar contribuyente
+                        if (contribuyenteSelect) {
+                            contribuyenteSelect.value = multaData.contribuyenteId;
+                            // NO deshabilitar para que el valor se envíe en el formulario
+                            contribuyenteSelect.style.backgroundColor = '#f0f0f0';
+                            contribuyenteSelect.style.pointerEvents = 'none'; // Evitar cambios visuales pero mantener valor
+                        }
+                        
+                        // Auto-completar monto con saldo pendiente
+                        if (montoInput) {
+                            montoInput.value = multaData.saldoPendiente.toFixed(2);
+                        }
+                        
+                        // Cambiar tipo de pago a MULTA automáticamente
+                        const tipoSelect = document.getElementById('tipoPago');
+                        if (tipoSelect) {
+                            tipoSelect.value = 'MULTA';
+                        }
+                        
+                        // Auto-completar concepto
+                        const conceptoInput = document.getElementById('concepto');
+                        if (conceptoInput && !conceptoInput.value) {
+                            conceptoInput.value = `Pago de multa ${multaData.numeroMulta}`;
+                        }
+                    } else {
+                        // Si no hay multa seleccionada, restaurar contribuyente
+                        if (contribuyenteSelect) {
+                            contribuyenteSelect.style.backgroundColor = '';
+                            contribuyenteSelect.style.pointerEvents = '';
+                            contribuyenteSelect.value = '';
+                        }
+                        if (montoInput) {
+                            montoInput.value = '';
+                        }
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando multas:', error);
+            // No mostrar alert para no interrumpir si no hay multas
+        });
+}
+
+
+function guardarPago() {
+    const form = document.getElementById('pagoForm');
+    const formData = new FormData(form);
+    
+    // Deshabilitar botón y mostrar carga
+    const btn = document.querySelector('.modal-submit');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+    
+    // Validar campos requeridos
+    if (!formData.get('contribuyenteId')) {
+        alert('Debe seleccionar un contribuyente');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('tipoPago')) {
+        alert('Debe seleccionar un tipo de pago');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('monto') || parseFloat(formData.get('monto')) <= 0) {
+        alert('Debe ingresar un monto válido mayor a 0');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('metodoPago')) {
+        alert('Debe seleccionar un método de pago');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    if (!formData.get('concepto')) {
+        alert('Debe ingresar un concepto para el pago');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+    }
+    
+    const pagoData = {
+        contribuyenteId: parseInt(formData.get('contribuyenteId')),
+        multaId: formData.get('multaId') ? parseInt(formData.get('multaId')) : null,
+        tipoPago: formData.get('tipoPago'),
+        monto: parseFloat(formData.get('monto')),
+        metodoPago: formData.get('metodoPago'),
+        referencia: formData.get('referencia') || '',
+        concepto: formData.get('concepto')
+    };
+    
+    // Obtener token CSRF
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+    
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+    }
+    
+    fetch('/pagos/api', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(pagoData)
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            return response.text().then(text => {
+                throw new Error(text || 'Error al crear el pago');
+            });
+        }
+    })
+    .then(data => {
+        closeModal();
+        alert('Pago creado exitosamente con ID: ' + data.id);
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al guardar el pago: ' + error.message);
+    })
+    .finally(() => {
+        // Restaurar botón
+        const btn = document.querySelector('.modal-submit');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Guardar';
+        }
+    });
+}
+</script>
+</body>
+</html>

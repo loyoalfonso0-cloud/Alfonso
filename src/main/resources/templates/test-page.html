@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Independiente</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: rgba(255,255,255,0.1); 
+            padding: 30px; 
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .success { 
+            background: rgba(76, 175, 80, 0.3); 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin: 20px 0;
+            border-left: 5px solid #4CAF50;
+        }
+        .info { 
+            background: rgba(33, 150, 243, 0.3); 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin: 15px 0;
+            border-left: 5px solid #2196F3;
+        }
+        h1 { color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .timestamp { font-family: monospace; font-size: 12px; opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 TEST INDEPENDIENTE - TASAS MUNICIPALES</h1>
+        
+        <div class="success">
+            <h2>✅ ÉXITO TOTAL</h2>
+            <p><strong>Mensaje:</strong> <span th:text="${mensaje}">Test funcionando</span></p>
+            <p class="timestamp"><strong>Timestamp:</strong> <span th:text="${timestamp}">0</span></p>
+        </div>
+        
+        <div class="info">
+            <h3>🔍 Diagnóstico Completo:</h3>
+            <ul>
+                <li>✅ Spring Boot funcionando correctamente</li>
+                <li>✅ Controlador independiente operativo</li>
+                <li>✅ Template engine (Thymeleaf) procesando</li>
+                <li>✅ Rutas y mapeo funcionando</li>
+                <li>✅ Modelo de datos pasando correctamente</li>
+            </ul>
+        </div>
+        
+        <div class="info">
+            <h3>🎯 Conclusión:</h3>
+            <p>Si ves esta página, el problema NO está en:</p>
+            <ul>
+                <li>❌ Spring Boot</li>
+                <li>❌ Thymeleaf</li>
+                <li>❌ Controladores básicos</li>
+                <li>❌ Templates HTML</li>
+            </ul>
+            <p><strong>El problema está específicamente en el módulo de Tasas.</strong></p>
+        </div>
+        
+        <div class="success">
+            <h3>🔧 Próximos pasos:</h3>
+            <ol>
+                <li>Verificar permisos de seguridad específicos</li>
+                <li>Revisar dependencias del TasaService</li>
+                <li>Comprobar configuración de Spring Security</li>
+                <li>Analizar logs específicos del módulo Tasas</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

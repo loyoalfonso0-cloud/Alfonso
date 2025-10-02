@@ -1,0 +1,394 @@
+/* DISEÑOS PROFESIONALES DE BOTONES - Sistema Tributario Empresarial */
+
+/* Botones profesionales ultra modernos */
+.btn-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    text-transform: none;
+    letter-spacing: 0.025em;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+.btn-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-modern:hover::before {
+    left: 100%;
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.btn-modern:active {
+    transform: translateY(0);
+}
+
+/* Variantes de colores modernos */
+.btn-modern-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-modern-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+}
+
+.btn-modern-success::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+}
+
+.btn-modern-success:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.btn-modern-export {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+/* ========== ESTILO 2: BOTONES GLASSMORPHISM ========== */
+.btn-glass {
+    padding: 12px 24px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.btn-glass:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.btn-glass-primary {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.btn-glass-success {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* ========== ESTILO 3: BOTONES NEOMORPHISM ========== */
+.btn-neomorph {
+    padding: 12px 24px;
+    border-radius: 20px;
+    border: none;
+    background: #2a2a3a;
+    color: #e7e7f7;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    box-shadow: 
+        8px 8px 16px rgba(0, 0, 0, 0.3),
+        -8px -8px 16px rgba(255, 255, 255, 0.05);
+}
+
+.btn-neomorph:hover {
+    box-shadow: 
+        4px 4px 8px rgba(0, 0, 0, 0.3),
+        -4px -4px 8px rgba(255, 255, 255, 0.05);
+    transform: translateY(2px);
+}
+
+.btn-neomorph:active {
+    box-shadow: 
+        inset 4px 4px 8px rgba(0, 0, 0, 0.3),
+        inset -4px -4px 8px rgba(255, 255, 255, 0.05);
+}
+
+/* ========== ESTILO 4: BOTONES CON ICONOS ANIMADOS ========== */
+.btn-animated {
+    position: relative;
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    background-clip: padding-box;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.btn-animated::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+    border-radius: 10px;
+    z-index: -1;
+    animation: borderRotate 3s linear infinite;
+}
+
+@keyframes borderRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.btn-animated .icon {
+    transition: transform 0.3s ease;
+}
+
+.btn-animated:hover .icon {
+    transform: scale(1.2) rotate(10deg);
+}
+
+.btn-animated:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+}
+
+/* ========== ESTILO 5: BOTONES MINIMALISTAS ELEGANTES ========== */
+.btn-minimal {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: 2px solid #6366f1;
+    background: transparent;
+    color: #6366f1;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-minimal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: #6366f1;
+    transition: left 0.3s ease;
+    z-index: -1;
+}
+
+.btn-minimal:hover::before {
+    left: 0;
+}
+
+.btn-minimal:hover {
+    color: white;
+    border-color: #6366f1;
+}
+
+.btn-minimal-success {
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.btn-minimal-success::before {
+    background: #10b981;
+}
+
+.btn-minimal-success:hover {
+    border-color: #10b981;
+}
+
+/* ========== ESTILO 6: BOTONES CON EFECTOS 3D ========== */
+.btn-3d {
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(145deg, #6366f1, #4f46e5);
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    box-shadow: 
+        0 8px 15px rgba(99, 102, 241, 0.3),
+        0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(0);
+}
+
+.btn-3d:hover {
+    transform: translateY(-3px);
+    box-shadow: 
+        0 12px 25px rgba(99, 102, 241, 0.4),
+        0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-3d:active {
+    transform: translateY(-1px);
+    box-shadow: 
+        0 4px 8px rgba(99, 102, 241, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-3d-success {
+    background: linear-gradient(145deg, #10b981, #059669);
+    box-shadow: 
+        0 8px 15px rgba(16, 185, 129, 0.3),
+        0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-3d-success:hover {
+    box-shadow: 
+        0 12px 25px rgba(16, 185, 129, 0.4),
+        0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ========== ESTILO 7: BOTONES FUTURISTAS ========== */
+.btn-futuristic {
+    position: relative;
+    padding: 12px 24px;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    color: #00f2fe;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+}
+
+.btn-futuristic::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, #00f2fe, #4facfe);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.btn-futuristic::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: #1e1e2a;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    z-index: -1;
+}
+
+.btn-futuristic:hover::before {
+    opacity: 1;
+}
+
+.btn-futuristic:hover {
+    color: white;
+    text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+    .btn-modern,
+    .btn-glass,
+    .btn-neomorph,
+    .btn-animated,
+    .btn-minimal,
+    .btn-3d,
+    .btn-futuristic {
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+}
+
+/* ========== UTILIDADES PARA ICONOS ========== */
+.btn-icon {
+    font-size: 16px;
+    transition: transform 0.3s ease;
+}
+
+.btn:hover .btn-icon {
+    transform: scale(1.1);
+}
+
+/* Efectos especiales para iconos específicos */
+.btn:hover .icon-plus {
+    transform: rotate(90deg) scale(1.1);
+}
+
+.btn:hover .icon-export {
+    transform: translateY(-2px) scale(1.1);
+}
+
+.btn:hover .icon-edit {
+    transform: rotate(15deg) scale(1.1);
+}
+
+.btn:hover .icon-delete {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));
+}

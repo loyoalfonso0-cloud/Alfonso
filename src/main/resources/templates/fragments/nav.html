@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/icons.css}">
+    <script th:src="@{/js/theme.js}"></script>
+</head>
+<body>
+<div th:fragment="body" class="fullscreen-sidebar">
+    <div class="fullscreen-nav">
+        <!-- Header estratégico profesional -->
+        <div class="nav-header">
+            <div class="nav-logo">
+                <div class="logo-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div class="nav-title">Sistema Tributario</div>
+            </div>
+            <div class="nav-status">
+                <div class="status-indicator"></div>
+                <span>En línea</span>
+            </div>
+        </div>
+        
+        <!-- Navegación principal -->
+        <nav style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <!-- Dashboard -->
+            <a href="/dashboard" class="nav-link">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                </div>
+                <span>Dashboard</span>
+            </a>
+            
+            <!-- Módulos Tributarios -->
+            <div class="nav-section">
+                <div class="section-line"></div>
+                <span>Módulos Tributarios</span>
+                <div class="section-line"></div>
+            </div>
+        
+            <a href="/tributario/contribuyentes" class="nav-link" sec:authorize="hasAuthority('CONTRIBUYENTES_READ')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 21h18"/>
+                        <path d="M5 21V7l8-4v18"/>
+                        <path d="M19 21V11l-6-4"/>
+                    </svg>
+                </div>
+                <span>Contribuyentes</span>
+            </a>
+            
+            <a href="/tasas" class="nav-link" sec:authorize="hasAnyAuthority('TASAS_READ', 'TASAS_WRITE', 'TASAS_GESTIONAR')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9,22 9,12 15,12 15,22"></polyline>
+                    </svg>
+                </div>
+                <span>Tasas Municipales</span>
+            </a>
+            
+            <a href="/servicios" class="nav-link" sec:authorize="hasAnyAuthority('SERVICIOS_READ', 'SERVICIOS_WRITE', 'SERVICIOS_GESTIONAR')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </div>
+                <span>Servicios Municipales</span>
+            </a>
+            
+            <a href="/tributario/impuestos" class="nav-link" sec:authorize="hasAuthority('IMPUESTOS_READ')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                </div>
+                <span>Impuestos</span>
+            </a>
+            
+            <a href="/tributario/comprobantes" class="nav-link" sec:authorize="hasAuthority('COMPROBANTES_READ')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10,9 9,9 8,9"/>
+                    </svg>
+                </div>
+                <span>Comprobantes</span>
+            </a>
+            
+            <a href="/tributario/retenciones" class="nav-link" sec:authorize="hasAuthority('RETENCIONES_READ')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                </div>
+                <span>Retenciones</span>
+            </a>
+            
+            <a href="/tributario" class="nav-link" sec:authorize="hasAuthority('DECLARACIONES_READ')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                        <line x1="9" y1="18" x2="13" y2="18"/>
+                    </svg>
+                </div>
+                <span>Declaraciones</span>
+            </a>
+            
+            <a href="/pagos" class="nav-link" sec:authorize="hasAnyAuthority('PAGOS_READ', 'PAGOS_GESTIONAR')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="3" width="15" height="13"/>
+                        <path d="m16 8 2 2-2 2"/>
+                        <path d="M21 12H7"/>
+                        <path d="M7 8v8"/>
+                    </svg>
+                </div>
+                <span>Pagos</span>
+            </a>
+            
+            <a href="/transacciones" class="nav-link" sec:authorize="hasAnyAuthority('TRANSACCIONES_READ', 'TRANSACCIONES_WRITE', 'TRANSACCIONES_GESTIONAR')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <span>Transacciones</span>
+            </a>
+            
+            <a href="/multas" class="nav-link" sec:authorize="hasAnyAuthority('MULTAS_READ', 'MULTAS_GESTIONAR')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10,9 9,9 8,9"/>
+                    </svg>
+                </div>
+                <span>Multas</span>
+            </a>
+        
+            <!-- Administración -->
+            <div class="nav-section">Administración</div>
+            
+            <a href="/roles" class="nav-link" sec:authorize="hasAnyAuthority('ROLES_READ','ROLES_GESTIONAR','ROLES_VER') or hasRole('ADMIN_TRIBUTARIO')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <circle cx="12" cy="16" r="1"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                </div>
+                <span>Roles y Permisos</span>
+            </a>
+            
+            <a href="/personal" class="nav-link" sec:authorize="hasAnyAuthority('PERSONAL_VER','PERSONAL_GESTIONAR')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <span>Gestión de Personal</span>
+            </a>
+            
+            <a href="/auditoria" class="nav-link" sec:authorize="hasAnyAuthority('AUDITORIA_VER','AUDITORIA_GESTIONAR','ADMIN') or hasRole('SUPER_ADMIN')">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                        <circle cx="11" cy="11" r="3"/>
+                    </svg>
+                </div>
+                <span>Auditoría del Sistema</span>
+            </a>
+        
+            <!-- Cerrar sesión -->
+            <div style="margin-top:auto;padding-top:16px;border-top:1px solid rgba(148, 163, 184, 0.2)">
+                <a href="/logout" class="nav-link" id="logoutLink">
+                    <div class="nav-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16,17 21,12 16,7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                    </div>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Efecto hover para enlaces de navegación
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        navLinks.forEach(link => {
+            link.addEventListener('mouseenter', function() {
+                if (document.body.classList.contains('light-mode')) {
+                    this.style.background = 'linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%), linear-gradient(90deg, rgba(245, 243, 255, 0.95) 0%, rgba(237, 233, 254, 0.9) 100%)';
+                    this.style.color = '#7c3aed';
+                    this.style.border = '1px solid rgba(139, 92, 246, 0.25)';
+                    this.style.boxShadow = '0 4px 16px rgba(139, 92, 246, 0.2), 0 2px 8px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9)';
+                    this.style.transform = 'scale(1.02) translateX(6px)';
+                } else {
+                    this.style.background = 'var(--dark-lighter)';
+                    this.style.color = 'var(--text-primary)';
+                }
+            });
+            
+            link.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('active')) {
+                    this.style.background = 'transparent';
+                    this.style.color = 'var(--text-secondary)';
+                    this.style.border = 'none';
+                    this.style.boxShadow = 'none';
+                    this.style.transform = 'none';
+                }
+            });
+        });
+        
+        // Marcar enlace activo
+        const currentPath = window.location.pathname;
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+                link.style.background = 'var(--primary)';
+                link.style.color = 'white';
+            }
+        });
+    });
+    /*]]>*/
+</script>
+</body>
+</html>
+

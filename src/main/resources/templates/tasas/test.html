@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Tasas</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .success { background: #d4edda; padding: 20px; border-radius: 5px; }
+        .info { background: #d1ecf1; padding: 15px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="success">
+        <h1>✅ TASAS MUNICIPALES - TEST EXITOSO</h1>
+        <p><strong>Mensaje:</strong> <span th:text="${mensaje}">Test</span></p>
+        <p><strong>Total Tasas:</strong> <span th:text="${totalTasas}">0</span></p>
+    </div>
+    
+    <div class="info">
+        <h3>🔧 Diagnóstico:</h3>
+        <ul>
+            <li>✅ Controlador funcionando</li>
+            <li>✅ Template renderizando</li>
+            <li>✅ Thymeleaf procesando</li>
+            <li>✅ Rutas configuradas</li>
+        </ul>
+    </div>
+    
+    <div class="info">
+        <h3>📋 Próximos pasos:</h3>
+        <ol>
+            <li>Verificar permisos de seguridad</li>
+            <li>Probar controlador principal</li>
+            <li>Revisar template principal</li>
+            <li>Integrar con navegación</li>
+        </ol>
+    </div>
+</body>
+</html>

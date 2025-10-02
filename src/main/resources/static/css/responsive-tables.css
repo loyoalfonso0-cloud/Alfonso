@@ -1,0 +1,148 @@
+/* CSS para tablas responsivas en todos los módulos */
+
+/* Contenedor de tabla responsivo */
+.table-responsive {
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Tabla base responsiva */
+.table-responsive table {
+    min-width: 800px;
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card-bg, #1e1e2a);
+    margin: 0;
+}
+
+/* Headers de tabla con anchos mínimos */
+.table-responsive th {
+    position: sticky;
+    top: 0;
+    background: var(--card-bg, #1e1e2a);
+    z-index: 10;
+    white-space: nowrap;
+    padding: 12px 16px;
+    font-weight: 600;
+    color: var(--text-primary, #e7e7f7);
+    border-bottom: 2px solid var(--border-color, #2a2a3a);
+}
+
+/* Celdas de tabla */
+.table-responsive td {
+    padding: 12px 16px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border-color, #2a2a3a);
+    color: var(--text-secondary, #a4a4be);
+}
+
+/* Anchos específicos por tipo de columna */
+.table-responsive .col-name { min-width: 200px; }
+.table-responsive .col-document { min-width: 120px; }
+.table-responsive .col-email { min-width: 180px; }
+.table-responsive .col-phone { min-width: 120px; }
+.table-responsive .col-type { min-width: 100px; }
+.table-responsive .col-status { min-width: 80px; }
+.table-responsive .col-actions { min-width: 120px; }
+.table-responsive .col-date { min-width: 100px; }
+.table-responsive .col-amount { min-width: 120px; }
+.table-responsive .col-description { min-width: 150px; }
+
+/* Botones de acción en tablas */
+.table-responsive .action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.table-responsive .action-buttons .btn {
+    min-width: 32px;
+    padding: 6px 8px;
+    font-size: 12px;
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 768px) {
+    .table-responsive {
+        margin: 0 -16px;
+        border-radius: 0;
+    }
+    
+    .table-responsive table {
+        min-width: 600px;
+    }
+    
+    .table-responsive th,
+    .table-responsive td {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    
+    .table-responsive .col-name { min-width: 150px; }
+    .table-responsive .col-email { min-width: 140px; }
+    .table-responsive .col-description { min-width: 120px; }
+}
+
+/* Scrollbar personalizado para webkit */
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: var(--bg-secondary, #2a2a3a);
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: var(--primary, #6366f1);
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark, #4f46e5);
+}
+
+/* Estados de fila */
+.table-responsive tr:hover {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.table-responsive tr.inactive {
+    opacity: 0.6;
+}
+
+/* Badges en tablas */
+.table-responsive .badge {
+    white-space: nowrap;
+    font-size: 11px;
+    padding: 4px 8px;
+}
+
+/* Texto truncado para celdas largas */
+.table-responsive .text-truncate {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Indicador de scroll */
+.table-responsive::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to left, rgba(30, 30, 42, 0.8), transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.table-responsive:hover::after {
+    opacity: 1;
+}

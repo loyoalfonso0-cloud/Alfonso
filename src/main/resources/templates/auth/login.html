@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <style>
+        /* Professional Light Mode Login Form */
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%) !important;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px);
+            border-radius: 24px !important;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.08),
+                0 15px 35px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            position: relative;
+            overflow: hidden;
+            width: 450px !important;
+            max-width: 95vw !important;
+            padding: 50px 40px !important;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 300% 100%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        h2 {
+            color: #1e293b !important;
+            font-size: 32px !important;
+            font-weight: 700 !important;
+            margin-bottom: 35px !important;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .input-group {
+            margin-bottom: 24px !important;
+            position: relative;
+        }
+
+        .input-group input {
+            width: 100% !important;
+            padding: 18px 20px !important;
+            font-size: 16px !important;
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            background: rgba(248, 250, 252, 0.8) !important;
+            color: #1e293b !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .input-group input:focus {
+            outline: none !important;
+            border-color: #667eea !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 
+                0 0 0 3px rgba(102, 126, 234, 0.1),
+                0 4px 12px rgba(102, 126, 234, 0.15) !important;
+            transform: translateY(-1px);
+        }
+
+        .input-group input::placeholder {
+            color: #94a3b8 !important;
+            font-weight: 500;
+        }
+
+        #toggleBtn {
+            position: absolute !important;
+            right: 15px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            background: none !important;
+            border: none !important;
+            color: #94a3b8 !important;
+            cursor: pointer !important;
+            font-size: 18px !important;
+            padding: 8px !important;
+            border-radius: 6px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        #toggleBtn:hover {
+            color: #667eea !important;
+            background: rgba(102, 126, 234, 0.1) !important;
+            transform: translateY(-50%) scale(1.1) !important;
+        }
+
+        .actions {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin-bottom: 30px !important;
+            font-size: 14px !important;
+        }
+
+        .actions label {
+            display: flex !important;
+            align-items: center !important;
+            color: #64748b !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+        }
+
+        .actions input[type="checkbox"] {
+            margin-right: 8px !important;
+            accent-color: #667eea !important;
+        }
+
+        .actions a {
+            color: #667eea !important;
+            text-decoration: none !important;
+            font-weight: 600 !important;
+            transition: color 0.2s ease !important;
+        }
+
+        .actions a:hover {
+            color: #5a67d8 !important;
+            text-decoration: underline !important;
+        }
+
+        .btn-primary {
+            width: 100% !important;
+            padding: 18px !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 12px !important;
+            cursor: pointer !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+            margin-bottom: 20px !important;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6) !important;
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
+        }
+
+        .btn-primary:active {
+            transform: translateY(0) !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+        }
+
+        .alert {
+            padding: 12px 16px !important;
+            border-radius: 8px !important;
+            margin-bottom: 20px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            background: rgba(239, 68, 68, 0.1) !important;
+            color: #dc2626 !important;
+            border: 1px solid rgba(239, 68, 68, 0.2) !important;
+        }
+
+        .register {
+            text-align: center !important;
+            color: #64748b !important;
+            font-size: 14px !important;
+            margin-bottom: 20px !important;
+            font-weight: 500 !important;
+        }
+
+        .brand {
+            text-align: center !important;
+            color: #94a3b8 !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+        }
+
+        /* Hide all splash elements for clean design */
+        .splash, .splash2, .splash3, .splash4, .splash5, .splash6, .splash7, .splash8, .splash9, .splash10, .splash11, .splash12, .splash13, .splash14, .splash15 {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="auth-gradient">
+<div class="login-card" style="width: 450px; max-width: 95vw; padding: 40px;">
+    <h2 style="font-size: 28px; margin-bottom: 30px;">Login</h2>
+    <form method="post" action="/login">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <div class="input-group" style="margin-bottom: 20px;">
+            <input type="text" name="username" id="usernameField" placeholder="Usuario" required style="padding: 15px; font-size: 16px;">
+        </div>
+        <div class="input-group" style="margin-bottom: 20px; position: relative;">
+            <input type="password" name="password" placeholder="Contraseña" required id="passwordField" style="padding: 15px; font-size: 16px; padding-right: 50px;">
+            <button type="button" onclick="togglePassword()" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #a4a4be; cursor: pointer; font-size: 18px; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;" id="toggleBtn">
+                👁️
+            </button>
+        </div>
+        <div class="actions">
+            <label><input type="checkbox" name="remember-me" id="rememberCheckbox"> Recordarme</label>
+            <a href="#">¿Olvidaste tu contraseña?</a>
+        </div>
+        <button type="submit" class="btn-primary">Ingresar</button>
+        <div th:if="${param.error}" class="alert">Usuario o contraseña inválidos</div>
+        <div th:if="${param.logout}" class="alert">Sesión cerrada correctamente</div>
+    </form>
+    <div class="register">¿No tienes cuenta? Contacta al administrador.</div>
+    <div class="brand">Sistema Tributario</div>
+    <div class="splash"></div>
+    <div class="splash2"></div>
+    <div class="splash3"></div>
+    <div class="splash4"></div>
+    <div class="splash5"></div>
+    <div class="splash6"></div>
+    <div class="splash7"></div>
+    <div class="splash8"></div>
+    <div class="splash9"></div>
+    <div class="splash10"></div>
+    <div class="splash11"></div>
+    <div class="splash12"></div>
+    <div class="splash13"></div>
+    <div class="splash14"></div>
+    <div class="splash15"></div>
+</div>
+
+<script>
+function togglePassword() {
+    const passwordField = document.getElementById('passwordField');
+    const toggleBtn = document.getElementById('toggleBtn');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleBtn.innerHTML = '🙈';
+        toggleBtn.style.color = '#6366f1';
+    } else {
+        passwordField.type = 'password';
+        toggleBtn.innerHTML = '👁️';
+        toggleBtn.style.color = '#a4a4be';
+    }
+}
+
+// Funcionalidad para recordar usuario
+document.addEventListener('DOMContentLoaded', function() {
+    const usernameField = document.getElementById('usernameField');
+    const rememberCheckbox = document.getElementById('rememberCheckbox');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const loginForm = document.querySelector('form');
+    
+    // Cargar usuario guardado al cargar la página
+    loadRememberedUser();
+    
+    // Limpiar datos si se detecta logout desde otra pestaña
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'userLoggedOut' && e.newValue === 'true') {
+            localStorage.removeItem('rememberedUsername');
+            localStorage.removeItem('rememberUser');
+            localStorage.removeItem('userLoggedOut');
+            // Limpiar campos si están llenos
+            usernameField.value = '';
+            rememberCheckbox.checked = false;
+        }
+    });
+    
+    // Agregar efecto hover al botón de mostrar/ocultar contraseña
+    toggleBtn.addEventListener('mouseenter', function() {
+        this.style.color = '#6366f1';
+        this.style.transform = 'translateY(-50%) scale(1.1)';
+    });
+    
+    toggleBtn.addEventListener('mouseleave', function() {
+        if (document.getElementById('passwordField').type === 'password') {
+            this.style.color = '#a4a4be';
+        }
+        this.style.transform = 'translateY(-50%) scale(1)';
+    });
+    
+    // Manejar el cambio en el checkbox de recordar
+    rememberCheckbox.addEventListener('change', function() {
+        if (!this.checked) {
+            // Si se desmarca, eliminar usuario guardado
+            localStorage.removeItem('rememberedUsername');
+            localStorage.removeItem('rememberUser');
+        }
+    });
+    
+    // Manejar el envío del formulario
+    loginForm.addEventListener('submit', function(e) {
+        if (rememberCheckbox.checked && usernameField.value.trim()) {
+            // Guardar usuario si está marcado recordar
+            localStorage.setItem('rememberedUsername', usernameField.value.trim());
+            localStorage.setItem('rememberUser', 'true');
+        } else {
+            // Eliminar usuario guardado si no está marcado
+            localStorage.removeItem('rememberedUsername');
+            localStorage.removeItem('rememberUser');
+        }
+    });
+    
+    // Función para cargar usuario recordado
+    function loadRememberedUser() {
+        // Verificar si hay parámetro de logout en la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const isLogout = urlParams.get('logout');
+        
+        // Si hay logout, limpiar datos guardados y no cargar usuario
+        if (isLogout === 'true') {
+            localStorage.removeItem('rememberedUsername');
+            localStorage.removeItem('rememberUser');
+            return;
+        }
+        
+        const rememberedUsername = localStorage.getItem('rememberedUsername');
+        const rememberUser = localStorage.getItem('rememberUser');
+        
+        if (rememberUser === 'true' && rememberedUsername) {
+            usernameField.value = rememberedUsername;
+            rememberCheckbox.checked = true;
+            
+            // Agregar efecto visual para indicar que el usuario fue cargado
+            usernameField.style.background = 'rgba(102, 126, 234, 0.05)';
+            usernameField.style.borderColor = '#667eea';
+            
+            // Remover el efecto después de 2 segundos
+            setTimeout(function() {
+                usernameField.style.background = 'rgba(248, 250, 252, 0.8)';
+                usernameField.style.borderColor = '#e2e8f0';
+            }, 2000);
+        }
+    }
+});
+</script>
+</body>
+</html>
+

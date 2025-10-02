@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Pago - Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons-professional.css}">
+    <link rel="stylesheet" th:href="@{/css/icons.css}">
+    <script th:src="@{/js/theme.js}"></script>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header -->
+        <div class="fullscreen-header">
+            <h2 style="margin:0;color:#e2e8f0;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="page-title-icon">
+                    <rect x="1" y="3" width="15" height="13"/>
+                    <path d="m16 8 2 2-2 2"/>
+                    <path d="M21 12H7"/>
+                    <path d="M7 8v8"/>
+                </svg>
+                Nuevo Pago
+            </h2>
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="btn-modern btn-modern-secondary" onclick="window.location.href='/pagos'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <path d="m12 19-7-7 7-7"/>
+                        <path d="M19 12H5"/>
+                    </svg>
+                    Volver
+                </button>
+            </div>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${success}" class="alert alert-success" style="margin-bottom:20px">
+            <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger" style="margin-bottom:20px">
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Formulario -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Registrar Nuevo Pago</h3>
+            </div>
+            
+            <form th:action="@{/pagos/crear}" th:object="${pagoRequest}" method="post">
+                <div class="grid grid-cols-2 gap-4" style="padding:24px">
+                    
+                    <!-- Contribuyente -->
+                    <div class="form-group">
+                        <label class="form-label" for="contribuyenteId">Contribuyente *</label>
+                        <select th:field="*{contribuyenteId}" id="contribuyenteId" class="form-select" required>
+                            <option value="">Seleccionar contribuyente...</option>
+                            <!-- Las opciones se cargarán dinámicamente -->
+                        </select>
+                    </div>
+
+                    <!-- Declaración (opcional) -->
+                    <div class="form-group">
+                        <label class="form-label" for="declaracionId">Declaración (opcional)</label>
+                        <select th:field="*{declaracionId}" id="declaracionId" class="form-select">
+                            <option value="">Sin declaración asociada</option>
+                            <!-- Las opciones se cargarán dinámicamente -->
+                        </select>
+                    </div>
+
+                    <!-- Monto -->
+                    <div class="form-group">
+                        <label class="form-label" for="monto">Monto *</label>
+                        <input type="number" th:field="*{monto}" id="monto" class="form-control" 
+                               step="0.01" min="0.01" placeholder="0.00" required>
+                    </div>
+
+                    <!-- Método de Pago -->
+                    <div class="form-group">
+                        <label class="form-label" for="metodoPago">Método de Pago *</label>
+                        <select th:field="*{metodoPago}" id="metodoPago" class="form-select" required>
+                            <option value="">Seleccionar método...</option>
+                            <option value="EFECTIVO">Efectivo</option>
+                            <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                            <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+                            <option value="TARJETA_DEBITO">Tarjeta de Débito</option>
+                            <option value="PAGO_MOVIL">Pago Móvil</option>
+                            <option value="CHEQUE">Cheque</option>
+                            <option value="DEPOSITO">Depósito Bancario</option>
+                        </select>
+                    </div>
+
+                    <!-- Referencia -->
+                    <div class="form-group">
+                        <label class="form-label" for="referencia">Referencia</label>
+                        <input type="text" th:field="*{referencia}" id="referencia" class="form-control" 
+                               placeholder="Número de referencia, cheque, etc.">
+                        <small style="color:#64748b;font-size:12px">Opcional para efectivo, requerido para otros métodos</small>
+                    </div>
+
+                    <!-- Fecha de Pago -->
+                    <div class="form-group">
+                        <label class="form-label" for="fechaPago">Fecha de Pago</label>
+                        <input type="datetime-local" th:field="*{fechaPago}" id="fechaPago" class="form-control">
+                        <small style="color:#64748b;font-size:12px">Si no se especifica, se usará la fecha actual</small>
+                    </div>
+
+                    <!-- Concepto -->
+                    <div class="form-group" style="grid-column:span 2">
+                        <label class="form-label" for="concepto">Concepto *</label>
+                        <textarea th:field="*{concepto}" id="concepto" class="form-control" rows="3" 
+                                  placeholder="Descripción del pago..." required></textarea>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div style="padding:0 24px 24px;display:flex;justify-content:flex-end;gap:12px">
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/pagos'">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                            <polyline points="20,6 9,17 4,12"/>
+                        </svg>
+                        Registrar Pago
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar contribuyentes
+    cargarContribuyentes();
+    
+    // Manejar cambio de contribuyente para cargar sus declaraciones
+    document.getElementById('contribuyenteId').addEventListener('change', function() {
+        const contribuyenteId = this.value;
+        if (contribuyenteId) {
+            cargarDeclaraciones(contribuyenteId);
+        } else {
+            limpiarDeclaraciones();
+        }
+    });
+
+    // Manejar cambio de método de pago
+    document.getElementById('metodoPago').addEventListener('change', function() {
+        const metodo = this.value;
+        const referenciaField = document.getElementById('referencia');
+        
+        if (metodo === 'EFECTIVO') {
+            referenciaField.required = false;
+            referenciaField.placeholder = 'No requerido para efectivo';
+        } else {
+            referenciaField.required = true;
+            referenciaField.placeholder = 'Número de referencia requerido';
+        }
+    });
+
+    // Establecer fecha actual por defecto
+    const now = new Date();
+    const fechaActual = now.toISOString().slice(0, 16);
+    document.getElementById('fechaPago').value = fechaActual;
+});
+
+function cargarContribuyentes() {
+    fetch('/tributario/contribuyentes/api')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('contribuyenteId');
+            select.innerHTML = '<option value="">Seleccionar contribuyente...</option>';
+            
+            data.forEach(contribuyente => {
+                const option = document.createElement('option');
+                option.value = contribuyente.id;
+                option.textContent = `${contribuyente.rif} - ${contribuyente.razonSocial || (contribuyente.nombre + ' ' + contribuyente.apellido)}`;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar contribuyentes:', error);
+        });
+}
+
+function cargarDeclaraciones(contribuyenteId) {
+    fetch(`/tributario/api/declaraciones/contribuyente/${contribuyenteId}`)
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('declaracionId');
+            select.innerHTML = '<option value="">Sin declaración asociada</option>';
+            
+            data.forEach(declaracion => {
+                const option = document.createElement('option');
+                option.value = declaracion.id;
+                option.textContent = `Declaración #${declaracion.id} - ${declaracion.periodo}`;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar declaraciones:', error);
+            limpiarDeclaraciones();
+        });
+}
+
+function limpiarDeclaraciones() {
+    const select = document.getElementById('declaracionId');
+    select.innerHTML = '<option value="">Sin declaración asociada</option>';
+}
+
+// Validación del formulario
+document.querySelector('form').addEventListener('submit', function(e) {
+    const monto = document.getElementById('monto').value;
+    const metodoPago = document.getElementById('metodoPago').value;
+    const referencia = document.getElementById('referencia').value;
+    
+    if (parseFloat(monto) <= 0) {
+        e.preventDefault();
+        alert('El monto debe ser mayor a 0');
+        return;
+    }
+    
+    if (metodoPago !== 'EFECTIVO' && !referencia.trim()) {
+        e.preventDefault();
+        alert('La referencia es requerida para este método de pago');
+        return;
+    }
+});
+</script>
+</body>
+</html>

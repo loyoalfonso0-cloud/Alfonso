@@ -1,0 +1,1035 @@
+/* ===== THEME SYSTEM - GLOBAL STYLES ===== */
+
+/* Theme Toggle Component */
+.theme-toggle {
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 80px;
+    height: 44px;
+    background: linear-gradient(145deg, #374151, #4b5563);
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #6b7280;
+    box-shadow: 
+        inset 0 2px 4px rgba(0,0,0,0.1),
+        0 2px 8px rgba(0,0,0,0.15);
+}
+
+.toggle-switch:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+        inset 0 2px 4px rgba(0,0,0,0.1),
+        0 4px 12px rgba(0,0,0,0.2);
+}
+
+.toggle-icon {
+    font-size: 18px;
+    z-index: 3;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0 4px;
+}
+
+
+.toggle-slider {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(145deg, #6366f1, #8b5cf6);
+    border-radius: 18px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 2px 8px rgba(99, 102, 241, 0.3),
+        inset 0 1px 2px rgba(255,255,255,0.2);
+}
+
+/* ===== LIGHT MODE STYLES ===== */
+
+/* Toggle in Light Mode */
+body.light-mode .toggle-switch {
+    background: linear-gradient(145deg, #f1f5f9, #e2e8f0);
+    border-color: #cbd5e1;
+}
+
+body.light-mode .toggle-slider {
+    transform: translateX(36px);
+    background: linear-gradient(145deg, #f59e0b, #f97316);
+    box-shadow: 
+        0 2px 8px rgba(245, 158, 11, 0.3),
+        inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+
+
+/* Global Light Mode Styles */
+body.light-mode {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%) !important;
+    color: #000000 !important;
+}
+
+/* Modal Styles for Light Mode */
+body.light-mode .modal-content {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.08),
+        0 15px 35px rgba(0, 0, 0, 0.05) !important;
+}
+
+body.light-mode .modal-header {
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body.light-mode .modal-title {
+    color: #000000 !important;
+}
+
+body.light-mode .modal-close {
+    color: #64748b !important;
+}
+
+body.light-mode .modal-close:hover {
+    color: #1e293b !important;
+    background: rgba(226, 232, 240, 0.5) !important;
+}
+
+body.light-mode .form-label {
+    color: #000000 !important;
+}
+
+body.light-mode .form-control {
+    background: rgba(248, 250, 252, 0.8) !important;
+    border: 2px solid #e2e8f0 !important;
+    color: #000000 !important;
+}
+
+body.light-mode .form-control:focus {
+    border-color: #6366f1 !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 
+        0 0 0 3px rgba(99, 102, 241, 0.1),
+        0 4px 12px rgba(99, 102, 241, 0.15) !important;
+}
+
+body.light-mode .btn-secondary {
+    background: rgba(226, 232, 240, 0.8) !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+body.light-mode .btn-secondary:hover {
+    background: rgba(203, 213, 225, 0.9) !important;
+    color: #334155 !important;
+}
+
+/* Container Styles */
+body.light-mode .login-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 
+        0 10px 25px rgba(0,0,0,0.08),
+        0 4px 10px rgba(0,0,0,0.04) !important;
+    backdrop-filter: blur(10px);
+}
+
+/* Sidebar Light Mode Styles - Professional Design */
+body.light-mode .sidebar {
+    background: 
+        linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%),
+        linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%) !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    border-radius: 16px !important;
+    box-shadow: 
+        0 20px 40px rgba(15, 23, 42, 0.08),
+        0 8px 16px rgba(15, 23, 42, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(12px) !important;
+    margin: 8px !important;
+    padding: 16px !important;
+}
+
+body.light-mode .sidebar .system-brand {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%) !important;
+    border: 1px solid rgba(203, 213, 225, 0.4) !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    margin-bottom: 20px !important;
+    text-align: center !important;
+    box-shadow: 
+        0 4px 12px rgba(15, 23, 42, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+body.light-mode .sidebar .system-title {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    margin-bottom: 4px !important;
+}
+
+body.light-mode .sidebar .system-subtitle {
+    color: #64748b !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+/* Header titles in light mode */
+body.light-mode .header-title {
+    color: #000000 !important;
+    background: #000000 !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: #000000 !important;
+    background-clip: text !important;
+}
+
+body.light-mode .header-subtitle {
+    color: #475569 !important;
+}
+
+body.light-mode .sidebar .nav-section {
+    color: #475569 !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin: 24px 0 12px 0 !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid rgba(203, 213, 225, 0.3) !important;
+}
+
+body.light-mode .sidebar .nav-item {
+    color: #475569 !important;
+    border-radius: 10px !important;
+    padding: 12px 14px !important;
+    margin: 4px 0 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    font-weight: 500 !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+body.light-mode .sidebar .nav-item::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent) !important;
+    transition: left 0.5s ease !important;
+}
+
+body.light-mode .sidebar .nav-link:hover {
+    background: 
+        linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%),
+        linear-gradient(90deg, rgba(245, 243, 255, 0.95) 0%, rgba(237, 233, 254, 0.9) 100%) !important;
+    color: #7c3aed !important;
+    border: 1px solid rgba(139, 92, 246, 0.25) !important;
+    box-shadow: 
+        0 4px 16px rgba(139, 92, 246, 0.2),
+        0 2px 8px rgba(139, 92, 246, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    transform: scale(1.02) translateX(6px) !important;
+    position: relative !important;
+}
+
+body.light-mode .sidebar .nav-item.active {
+    background: 
+        linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%),
+        linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    transform: translateX(8px) scale(1.03) !important;
+    box-shadow: 
+        0 12px 28px rgba(99, 102, 241, 0.35),
+        0 6px 16px rgba(139, 92, 246, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+body.light-mode .sidebar .nav-item.active::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+}
+
+body.light-mode .sidebar .nav-item .nav-icon {
+    margin-right: 10px !important;
+    font-size: 16px !important;
+    width: 20px !important;
+    text-align: center !important;
+    display: inline-block !important;
+}
+
+/* Typography */
+body.light-mode h1,
+body.light-mode h2,
+body.light-mode h3,
+body.light-mode h4,
+body.light-mode h5,
+body.light-mode h6 {
+    color: #000000 !important;
+}
+
+body.light-mode p,
+body.light-mode span,
+body.light-mode div {
+    color: #000000 !important;
+}
+
+/* Cards */
+body.light-mode .card {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+    box-shadow: 
+        0 4px 6px rgba(0,0,0,0.05),
+        0 1px 3px rgba(0,0,0,0.1) !important;
+    backdrop-filter: blur(5px);
+}
+
+body.light-mode .card-header {
+    background: rgba(248, 250, 252, 0.8) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body.light-mode .card-title {
+    color: #000000 !important;
+    font-weight: 600;
+}
+
+/* Statistics Cards */
+body.light-mode .card[style*="border-left"] {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 
+        0 4px 12px rgba(0,0,0,0.08),
+        0 1px 4px rgba(0,0,0,0.04) !important;
+}
+
+/* Navigation */
+body.light-mode aside {
+    background: rgba(248, 250, 252, 0.95) !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05) !important;
+    backdrop-filter: blur(10px);
+}
+
+body.light-mode .nav-item {
+    color: #475569 !important;
+    transition: all 0.3s ease;
+}
+
+body.light-mode .nav-item:hover {
+    background: rgba(226, 232, 240, 0.7) !important;
+    color: #1e293b !important;
+}
+
+body.light-mode .nav-item.active {
+    background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Buttons */
+body.light-mode .btn {
+    background: rgba(248, 250, 252, 0.9) !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+body.light-mode .btn:hover {
+    background: rgba(241, 245, 249, 0.9) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+body.light-mode .btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
+    color: white !important;
+    border: none !important;
+}
+
+body.light-mode .btn-success {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: none !important;
+}
+
+body.light-mode .btn-warning {
+    background: linear-gradient(135deg, #f59e0b, #f97316) !important;
+    color: white !important;
+    border: none !important;
+}
+
+body.light-mode .btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: white !important;
+    border: none !important;
+}
+
+body.light-mode .btn-info {
+    background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+    color: white !important;
+    border: none !important;
+}
+
+body.light-mode .btn-secondary {
+    background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+    color: white !important;
+    border: none !important;
+}
+
+body.light-mode .btn-dark {
+    background: linear-gradient(135deg, #374151, #1f2937) !important;
+    color: white !important;
+    border: none !important;
+}
+
+/* Forms */
+body.light-mode .form-control {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #1e293b !important;
+}
+
+body.light-mode .form-control:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+body.light-mode .form-label {
+    color: #374151 !important;
+    font-weight: 500;
+}
+
+/* Tables */
+body.light-mode table {
+    background: rgba(255, 255, 255, 0.9) !important;
+}
+
+body.light-mode th {
+    background: rgba(248, 250, 252, 0.9) !important;
+    color: #000000 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body.light-mode td {
+    color: #000000 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+body.light-mode tr:hover {
+    background: rgba(248, 250, 252, 0.5) !important;
+}
+
+/* Modals */
+body.light-mode .modal {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+}
+
+body.light-mode .modal-header {
+    background: rgba(248, 250, 252, 0.9) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Badges */
+body.light-mode .badge {
+    color: #000000 !important;
+    font-weight: 600;
+}
+
+body.light-mode .badge-success {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+}
+
+body.light-mode .badge-primary {
+    background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
+    color: white !important;
+}
+
+body.light-mode .badge-warning {
+    background: linear-gradient(135deg, #f59e0b, #f97316) !important;
+    color: white !important;
+}
+
+body.light-mode .badge-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: white !important;
+}
+
+/* Brand */
+body.light-mode .brand {
+    color: #64748b !important;
+    font-weight: 500;
+}
+
+/* Scrollbars */
+body.light-mode ::-webkit-scrollbar {
+    width: 8px;
+}
+
+body.light-mode ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+body.light-mode ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+body.light-mode ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Animations */
+@keyframes lightModeTransition {
+    from { opacity: 0.8; }
+    to { opacity: 1; }
+}
+
+body.light-mode * {
+    animation: lightModeTransition 0.3s ease-out;
+}
+
+/* ===== PANEL TRIBUTARIO - COMPORTAMIENTO INVERSO ===== */
+
+/* Cuando está en modo claro, el panel tributario debe ser oscuro */
+body.light-mode .tributario-panel {
+    background: linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 25%, #2d3748 50%, #1a202c 75%, #0f1419 100%) !important;
+    color: #f7fafc !important;
+}
+
+body.light-mode .tributario-panel .fullscreen-sidebar {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.98) 100%) !important;
+    border-right: 1px solid rgba(139, 92, 246, 0.15) !important;
+}
+
+body.light-mode .tributario-panel .fullscreen-main {
+    background: linear-gradient(135deg, 
+        rgba(15, 23, 42, 0.95) 0%, 
+        rgba(30, 41, 59, 0.9) 50%, 
+        rgba(51, 65, 85, 0.85) 100%) !important;
+}
+
+body.light-mode .tributario-panel .fullscreen-header {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2) !important;
+    color: #e2e8f0 !important;
+}
+
+body.light-mode .tributario-panel .fullscreen-table-container {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.75) 100%) !important;
+    border: 1px solid rgba(148, 163, 184, 0.12) !important;
+}
+
+body.light-mode .tributario-panel .fullscreen-table th {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%) !important;
+    color: #f1f5f9 !important;
+}
+
+body.light-mode .tributario-panel .fullscreen-table td {
+    color: #e2e8f0 !important;
+}
+
+body.light-mode .tributario-panel .stat-card {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%) !important;
+    border: 1px solid rgba(148, 163, 184, 0.15) !important;
+    color: #e2e8f0 !important;
+}
+
+body.light-mode .tributario-panel .nav-link {
+    color: #cbd5e1 !important;
+}
+
+body.light-mode .tributario-panel .nav-link:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%) !important;
+    color: #f1f5f9 !important;
+}
+
+body.light-mode .tributario-panel .nav-link.active {
+    background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%) !important;
+    color: white !important;
+}
+
+body.light-mode .tributario-panel .form-control {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(148, 163, 184, 0.3) !important;
+    color: #e2e8f0 !important;
+}
+
+body.light-mode .tributario-panel .form-select {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(148, 163, 184, 0.3) !important;
+    color: #e2e8f0 !important;
+}
+
+body.light-mode .tributario-panel .modal-content {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border: 1px solid rgba(148, 163, 184, 0.3) !important;
+    color: #e2e8f0 !important;
+}
+
+body.light-mode .tributario-panel .modal-header {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2) !important;
+}
+
+body.light-mode .tributario-panel .modal-title {
+    color: #f1f5f9 !important;
+}
+
+body.light-mode .tributario-panel .form-label {
+    color: #f1f5f9 !important;
+}
+
+body.light-mode .tributario-panel h1,
+body.light-mode .tributario-panel h2,
+body.light-mode .tributario-panel h3,
+body.light-mode .tributario-panel h4,
+body.light-mode .tributario-panel h5,
+body.light-mode .tributario-panel h6 {
+    color: #f1f5f9 !important;
+}
+
+body.light-mode .tributario-panel p,
+body.light-mode .tributario-panel span,
+body.light-mode .tributario-panel div {
+    color: #e2e8f0 !important;
+}
+
+/* Cuando está en modo oscuro, el panel tributario debe ser claro */
+body:not(.light-mode) .tributario-panel {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%) !important;
+    color: #000000 !important;
+}
+
+body:not(.light-mode) .tributario-panel .fullscreen-sidebar {
+    background: linear-gradient(180deg, 
+        rgba(255, 255, 255, 0.98) 0%, 
+        rgba(248, 250, 252, 0.95) 50%, 
+        rgba(241, 245, 249, 0.92) 100%) !important;
+    border-right: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+body:not(.light-mode) .tributario-panel .fullscreen-main {
+    background: linear-gradient(135deg, 
+        rgba(248, 250, 252, 0.95) 0%, 
+        rgba(241, 245, 249, 0.9) 50%, 
+        rgba(226, 232, 240, 0.85) 100%) !important;
+}
+
+body:not(.light-mode) .tributario-panel .fullscreen-header {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+    color: #000000 !important;
+}
+
+body:not(.light-mode) .tributario-panel .fullscreen-table-container {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+body:not(.light-mode) .tributario-panel .fullscreen-table th {
+    background: rgba(248, 250, 252, 0.9) !important;
+    color: #000000 !important;
+}
+
+body:not(.light-mode) .tributario-panel .fullscreen-table td {
+    color: #000000 !important;
+}
+
+body:not(.light-mode) .tributario-panel .stat-card {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    color: #000000 !important;
+}
+
+body:not(.light-mode) .tributario-panel .nav-link {
+    color: rgba(71, 85, 105, 0.9) !important;
+}
+
+body:not(.light-mode) .tributario-panel .nav-link:hover {
+    background: rgba(139, 92, 246, 0.1) !important;
+    color: #7c3aed !important;
+}
+
+body:not(.light-mode) .tributario-panel .nav-link.active {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    color: white !important;
+}
+
+body:not(.light-mode) .tributario-panel .form-control {
+    background: rgba(248, 250, 252, 0.8) !important;
+    border: 2px solid #e2e8f0 !important;
+    color: #000000 !important;
+}
+
+body:not(.light-mode) .tributario-panel .form-select {
+    background: rgba(248, 250, 252, 0.8) !important;
+    border: 2px solid #e2e8f0 !important;
+    color: #000000 !important;
+}
+
+body:not(.light-mode) .tributario-panel .modal-content {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    color: #000000 !important;
+}
+
+body:not(.light-mode) .tributario-panel .modal-header {
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body:not(.light-mode) .tributario-panel .modal-title {
+    color: #000000 !important;
+}
+
+body:not(.light-mode) .tributario-panel .form-label {
+    color: #000000 !important;
+}
+
+body:not(.light-mode) .tributario-panel h1,
+body:not(.light-mode) .tributario-panel h2,
+body:not(.light-mode) .tributario-panel h3,
+body:not(.light-mode) .tributario-panel h4,
+body:not(.light-mode) .tributario-panel h5,
+body:not(.light-mode) .tributario-panel h6 {
+    color: #000000 !important;
+}
+
+body:not(.light-mode) .tributario-panel p,
+body:not(.light-mode) .tributario-panel span,
+body:not(.light-mode) .tributario-panel div {
+    color: #000000 !important;
+}
+
+/* ===== MEJORAS PARA ACCESO RÁPIDO ===== */
+
+/* Contenedor de acceso rápido mejorado */
+.quick-access-container {
+    margin: 40px 0;
+    padding: 32px;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%);
+    border-radius: 24px;
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-access-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(139, 92, 246, 0.6) 20%, 
+        rgba(168, 85, 247, 0.8) 50%, 
+        rgba(99, 102, 241, 0.6) 80%, 
+        transparent);
+}
+
+/* Título de acceso rápido mejorado */
+.quick-access-title {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.quick-access-title h3 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.quick-access-title .lightning {
+    font-size: 32px;
+    animation: pulse-lightning 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));
+}
+
+@keyframes pulse-lightning {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+.quick-access-title p {
+    color: #94a3b8;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Grid de acceso rápido mejorado */
+.quick-access-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Tarjetas de acceso rápido mejoradas */
+.quick-access-card {
+    background: linear-gradient(145deg, 
+        rgba(15, 23, 42, 0.9) 0%, 
+        rgba(30, 41, 59, 0.8) 50%,
+        rgba(51, 65, 85, 0.7) 100%);
+    border-radius: 20px;
+    padding: 28px;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.quick-access-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.quick-access-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(139, 92, 246, 0.1), 
+        transparent);
+    transition: left 0.6s ease;
+}
+
+.quick-access-card:hover::after {
+    left: 100%;
+}
+
+.quick-access-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 40px rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.4);
+    background: linear-gradient(145deg, 
+        rgba(15, 23, 42, 0.95) 0%, 
+        rgba(30, 41, 59, 0.9) 50%,
+        rgba(51, 65, 85, 0.85) 100%);
+}
+
+.quick-access-card:active {
+    transform: translateY(-4px) scale(1.01);
+}
+
+/* Header de la tarjeta */
+.quick-access-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 16px;
+}
+
+/* Iconos mejorados */
+.quick-access-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-access-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: inherit;
+    opacity: 0.1;
+    border-radius: inherit;
+}
+
+.quick-access-card:hover .quick-access-icon {
+    transform: scale(1.15) rotate(5deg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Colores específicos para cada módulo */
+.quick-access-card.contribuyentes .quick-access-icon {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%);
+    color: #10b981;
+    border: 2px solid rgba(16, 185, 129, 0.3);
+}
+
+.quick-access-card.impuestos .quick-access-icon {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.15) 100%);
+    color: #f59e0b;
+    border: 2px solid rgba(245, 158, 11, 0.3);
+}
+
+.quick-access-card.retenciones .quick-access-icon {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%);
+    color: #ef4444;
+    border: 2px solid rgba(239, 68, 68, 0.3);
+}
+
+.quick-access-card.comprobantes .quick-access-icon {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(8, 145, 178, 0.15) 100%);
+    color: #06b6d4;
+    border: 2px solid rgba(6, 182, 212, 0.3);
+}
+
+.quick-access-card.declaraciones .quick-access-icon {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(124, 58, 237, 0.15) 100%);
+    color: #8b5cf6;
+    border: 2px solid rgba(139, 92, 246, 0.3);
+}
+
+.quick-access-card.roles .quick-access-icon {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(147, 51, 234, 0.15) 100%);
+    color: #a855f7;
+    border: 2px solid rgba(168, 85, 247, 0.3);
+}
+
+.quick-access-card.personal .quick-access-icon {
+    background: linear-gradient(135deg, rgba(100, 116, 139, 0.2) 0%, rgba(71, 85, 105, 0.15) 100%);
+    color: #64748b;
+    border: 2px solid rgba(100, 116, 139, 0.3);
+}
+
+.quick-access-card.auditoria .quick-access-icon {
+    background: linear-gradient(135deg, rgba(132, 204, 22, 0.2) 0%, rgba(101, 163, 13, 0.15) 100%);
+    color: #84cc16;
+    border: 2px solid rgba(132, 204, 22, 0.3);
+}
+
+/* Información de la tarjeta */
+.quick-access-info {
+    flex: 1;
+}
+
+.quick-access-label {
+    font-size: 14px;
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    transition: color 0.3s ease;
+}
+
+.quick-access-title-text {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    transition: all 0.3s ease;
+}
+
+.quick-access-card:hover .quick-access-label {
+    color: #cbd5e1;
+}
+
+.quick-access-card:hover .quick-access-title-text {
+    transform: translateX(4px);
+}
+
+/* Indicador de flecha */
+.quick-access-arrow {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 24px;
+    height: 24px;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+    color: #8b5cf6;
+}
+
+.quick-access-card:hover .quick-access-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Modo claro para acceso rápido */
+body.light-mode .quick-access-container {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+body.light-mode .quick-access-title h3 {
+    color: #1e293b;
+    background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+body.light-mode .quick-access-title p {
+    color: #64748b;
+}
+
+body.light-mode .quick-access-card {
+    background: linear-gradient(145deg, 
+        rgba(255, 255, 255, 0.95) 0%, 
+        rgba(248, 250, 252, 0.9) 100%);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .quick-access-card:hover {
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.15),
+        0 0 20px rgba(139, 92, 246, 0.1);
+}
+
+body.light-mode .quick-access-label {
+    color: #64748b;
+}
+
+body.light-mode .quick-access-title-text {
+    color: #1e293b;
+}
+
+body.light-mode .quick-access-card:hover .quick-access-label {
+    color: #475569;
+}

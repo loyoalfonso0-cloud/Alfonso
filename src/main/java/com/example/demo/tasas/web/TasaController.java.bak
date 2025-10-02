@@ -1,0 +1,258 @@
+package com.example.demo.tasas.web;
+
+import com.example.demo.tasas.dto.TasaRequest;
+import com.example.demo.tasas.dto.TasaResponse;
+import com.example.demo.tasas.model.EstadoTasa;
+import com.example.demo.tasas.model.PeriodoFacturacion;
+import com.example.demo.tasas.model.TipoTasa;
+import com.example.demo.tasas.service.TasaService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.security.Principal;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Controlador para la gestión de tasas municipales
+ */
+@Controller
+@RequestMapping("/tasas")
+@Slf4j
+public class TasaController {
+
+    // private final TasaService tasaService; // Temporalmente comentado
+
+    /**
+     * Página principal de tasas
+     */
+    @GetMapping
+    public String index(Model model) {
+        log.info("=== ACCEDIENDO A TASAS PRINCIPALES ===");
+        
+        try {
+            // Datos mínimos para el template
+            model.addAttribute("totalTasas", 0);
+            model.addAttribute("activasTasas", 0);
+            model.addAttribute("pagadasTasas", 0);
+            model.addAttribute("vencidasTasas", 0);
+            
+            log.info("=== RENDERIZANDO TEMPLATE TASAS/INDEX ===");
+            return "tasas/index";
+        } catch (Exception e) {
+            log.error("=== ERROR EN CONTROLADOR TASAS ===", e);
+            return "error";
+        }
+    }
+
+    /*
+     * API - Listar todas las tasas
+     */
+    /*@GetMapping("/api")
+    @PreAuthorize("hasAnyAuthority('TASAS_READ', 'TASAS_WRITE', 'TASAS_GESTIONAR')")
+    @ResponseBody*/
+    public ResponseEntity<Page<TasaResponse>> listarTasasApi(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long contribuyenteId,
+            @RequestParam(required = false) TipoTasa tipoTasa,
+            @RequestParam(required = false) EstadoTasa estado,
+            @RequestParam(required = false) String zonaMunicipal) {
+        
+        try {
+            Page<TasaResponse> tasas;
+            
+            if (contribuyenteId != null || tipoTasa != null || estado != null || zonaMunicipal != null) {
+                tasas = tasaService.buscarTasas(contribuyenteId, tipoTasa, estado, zonaMunicipal, page, size);
+            } else {
+                tasas = tasaService.listarTasas(page, size);
+            }
+            
+            return ResponseEntity.ok(tasas);
+        } catch (Exception e) {
+            log.error("Error al obtener tasas via API", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * API - Obtener tasa por ID
+     */
+    @GetMapping("/api/{id}")
+    @PreAuthorize("hasAnyAuthority('TASAS_READ', 'TASAS_WRITE', 'TASAS_GESTIONAR')")
+    @ResponseBody
+    public ResponseEntity<TasaResponse> obtenerTasaPorId(@PathVariable Long id) {
+        try {
+            return tasaService.obtenerTasaPorId(id)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            log.error("Error al obtener tasa por ID: {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * API - Crear nueva tasa
+     */
+    @PostMapping("/api")
+    @PreAuthorize("hasAnyAuthority('TASAS_WRITE', 'TASAS_GESTIONAR')")
+    @ResponseBody
+    public ResponseEntity<?> crearTasa(@Valid @RequestBody TasaRequest request, Principal principal) {
+        try {
+            request.setUsuarioRegistro(principal.getName());
+            TasaResponse tasaCreada = tasaService.crearTasa(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(tasaCreada);
+        } catch (Exception e) {
+            log.error("Error al crear tasa", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Error al crear la tasa: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * API - Actualizar tasa
+     */
+    @PutMapping("/api/{id}")
+    @PreAuthorize("hasAnyAuthority('TASAS_WRITE', 'TASAS_GESTIONAR')")
+    @ResponseBody
+    public ResponseEntity<?> actualizarTasa(@PathVariable Long id, 
+                                           @Valid @RequestBody TasaRequest request, 
+                                           Principal principal) {
+        try {
+            request.setUsuarioRegistro(principal.getName());
+            TasaResponse tasaActualizada = tasaService.actualizarTasa(id, request);
+            return ResponseEntity.ok(tasaActualizada);
+        } catch (Exception e) {
+            log.error("Error al actualizar tasa ID: {}", id, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Error al actualizar la tasa: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * API - Registrar pago de tasa
+     */
+    @PostMapping("/api/{id}/pago")
+    @PreAuthorize("hasAnyAuthority('TASAS_WRITE', 'TASAS_GESTIONAR')")
+    @ResponseBody
+    public ResponseEntity<?> registrarPago(@PathVariable Long id,
+                                          @RequestParam BigDecimal monto,
+                                          Principal principal) {
+        try {
+            TasaResponse tasaActualizada = tasaService.registrarPago(id, monto, principal.getName());
+            return ResponseEntity.ok(tasaActualizada);
+        } catch (Exception e) {
+            log.error("Error al registrar pago para tasa ID: {}", id, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Error al registrar el pago: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * API - Cambiar estado de tasa
+     */
+    @PutMapping("/api/{id}/estado")
+    @PreAuthorize("hasAnyAuthority('TASAS_GESTIONAR')")
+    @ResponseBody
+    public ResponseEntity<?> cambiarEstado(@PathVariable Long id,
+                                          @RequestParam EstadoTasa estado,
+                                          Principal principal) {
+        try {
+            TasaResponse tasaActualizada = tasaService.cambiarEstado(id, estado, principal.getName());
+            return ResponseEntity.ok(tasaActualizada);
+        } catch (Exception e) {
+            log.error("Error al cambiar estado de tasa ID: {}", id, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Error al cambiar el estado: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * API - Obtener tasas por contribuyente
+     */
+    @GetMapping("/api/contribuyente/{contribuyenteId}")
+    @PreAuthorize("hasAnyAuthority('TASAS_READ', 'TASAS_WRITE', 'TASAS_GESTIONAR')")
+    @ResponseBody
+    public ResponseEntity<List<TasaResponse>> obtenerTasasPorContribuyente(@PathVariable Long contribuyenteId) {
+        try {
+            List<TasaResponse> tasas = tasaService.obtenerTasasPorContribuyente(contribuyenteId);
+            return ResponseEntity.ok(tasas);
+        } catch (Exception e) {
+            log.error("Error al obtener tasas por contribuyente ID: {}", contribuyenteId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * API - Obtener estadísticas
+     */
+    @GetMapping("/api/estadisticas")
+    @PreAuthorize("hasAnyAuthority('TASAS_READ', 'TASAS_WRITE', 'TASAS_GESTIONAR')")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> obtenerEstadisticas() {
+        try {
+            Map<String, Object> estadisticas = tasaService.obtenerEstadisticas();
+            return ResponseEntity.ok(estadisticas);
+        } catch (Exception e) {
+            log.error("Error al obtener estadísticas de tasas", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * API - Obtener tipos de tasa
+     */
+    @GetMapping("/api/tipos")
+    @PreAuthorize("hasAnyAuthority('TASAS_READ', 'TASAS_WRITE', 'TASAS_GESTIONAR')")
+    @ResponseBody
+    public ResponseEntity<TipoTasa[]> obtenerTiposTasa() {
+        return ResponseEntity.ok(TipoTasa.values());
+    }
+
+    /**
+     * API - Obtener estados de tasa
+     */
+    @GetMapping("/api/estados")
+    @PreAuthorize("hasAnyAuthority('TASAS_READ', 'TASAS_WRITE', 'TASAS_GESTIONAR')")
+    @ResponseBody
+    public ResponseEntity<EstadoTasa[]> obtenerEstadosTasa() {
+        return ResponseEntity.ok(EstadoTasa.values());
+    }
+
+    /**
+     * API - Obtener períodos de facturación
+     */
+    @GetMapping("/api/periodos")
+    @PreAuthorize("hasAnyAuthority('TASAS_READ', 'TASAS_WRITE', 'TASAS_GESTIONAR')")
+    @ResponseBody
+    public ResponseEntity<PeriodoFacturacion[]> obtenerPeriodosFacturacion() {
+        return ResponseEntity.ok(PeriodoFacturacion.values());
+    }
+
+    /**
+     * Tarea programada - Actualizar tasas vencidas
+     */
+    @PostMapping("/api/actualizar-vencidas")
+    @PreAuthorize("hasAuthority('TASAS_GESTIONAR')")
+    @ResponseBody
+    public ResponseEntity<?> actualizarTasasVencidas() {
+        try {
+            tasaService.actualizarTasasVencidas();
+            return ResponseEntity.ok(Map.of("mensaje", "Tasas vencidas actualizadas correctamente"));
+        } catch (Exception e) {
+            log.error("Error al actualizar tasas vencidas", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al actualizar tasas vencidas: " + e.getMessage()));
+        }
+    }
+}

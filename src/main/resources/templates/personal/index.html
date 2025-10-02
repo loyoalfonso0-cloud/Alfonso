@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Personal - Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons-professional.css}">
+    <link rel="stylesheet" th:href="@{/css/icons.css}">
+    <script th:src="@{/js/theme.js}"></script>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header -->
+        <div class="fullscreen-header">
+            <h2 style="margin:0;color:#e2e8f0;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="page-title-icon">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Gestión de Personal
+            </h2>
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="btn-modern btn-modern-success" sec:authorize="hasAnyAuthority('USUARIOS_CREAR','USUARIOS_EDITAR','USUARIOS_ELIMINAR','PERSONAL_GESTIONAR')" onclick="openModalEmpleado('Nuevo Empleado')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nuevo Empleado
+                </button>
+                <button class="btn-modern btn-modern-export" sec:authorize="hasAuthority('REPORTES_EXPORT')" onclick="exportarEmpleados()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contenido con scroll -->
+        <div class="fullscreen-content">
+            <!-- Estadísticas rápidas -->
+            <div class="fullscreen-stats">
+                <div class="stat-card" style="border-left:4px solid #8b5cf6">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Total Empleados</div>
+                    <div style="font-size:32px;font-weight:700;color:#8b5cf6" th:text="${#lists.size(lista)}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #10b981">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Empleados Activos</div>
+                    <div style="font-size:32px;font-weight:700;color:#10b981" th:text="${estadisticas.activos}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #f59e0b">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Empleados Inactivos</div>
+                    <div style="font-size:32px;font-weight:700;color:#f59e0b" th:text="${estadisticas.inactivos}">0</div>
+                </div>
+            </div>
+
+            <!-- Tabla de personal -->
+            <div class="fullscreen-table-container">
+                <div style="padding:20px;border-bottom:1px solid rgba(148, 163, 184, 0.2)">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <h3 style="margin:0;color:#e2e8f0;font-size:18px;font-weight:600">📋 Lista de Personal</h3>
+                        <div style="display:flex;gap:12px;align-items:center">
+                            <input type="text" placeholder="Buscar empleado..." class="form-control" style="width:200px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="searchInput">
+                            <select class="form-select" style="width:150px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="filterDepartamento">
+                                <option value="">Todos los departamentos</option>
+                                <option value="TRIBUTARIO">Tributario</option>
+                                <option value="ADMINISTRACION">Administración</option>
+                                <option value="CONTABILIDAD">Contabilidad</option>
+                                <option value="SISTEMAS">Sistemas</option>
+                                <option value="RECURSOS_HUMANOS">Recursos Humanos</option>
+                            </select>
+                            <select class="form-select" style="width:120px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="filterEstado">
+                                <option value="">Todos</option>
+                                <option value="ACTIVO">Activo</option>
+                                <option value="INACTIVO">Inactivo</option>
+                                <option value="VACACIONES">Vacaciones</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="overflow-y:auto;max-height:calc(100vh - 320px)">
+                    <table class="fullscreen-table">
+                        <thead>
+                            <tr>
+                                <th>Empleado</th>
+                                <th>Documento</th>
+                                <th>Cargo</th>
+                                <th>Departamento</th>
+                                <th>Email</th>
+                                <th>Teléfono</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="personalTable">
+                            <tr th:each="p: ${lista}">
+                                <td>
+                                    <div>
+                                        <div style="font-weight:600;color:var(--text-primary)" th:text="${p.nombres + ' ' + p.apellidos}"></div>
+                                        <div class="text-muted" style="font-size:12px">ID: <span th:text="${p.id}"></span></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-family:monospace;font-weight:500" th:text="${p.documento}"></div>
+                                    <div class="text-muted" style="font-size:11px">DOC</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight:500" th:text="${p.cargo}"></div>
+                                    <div class="text-muted" style="font-size:11px">Cargo</div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-primary" style="font-size:11px" th:text="${p.departamento ?: 'No asignado'}">TRIBUTARIO</span>
+                                </td>
+                                <td>
+                                    <div style="font-size:13px" th:text="${p.email ?: (p.usuario?.email ?: 'Sin email')}"></div>
+                                    <div class="text-muted" style="font-size:11px">📧 Email</div>
+                                </td>
+                                <td>
+                                    <div style="font-family:monospace" th:text="${p.telefono ?: 'Sin teléfono'}">+57 300 123 4567</div>
+                                    <div class="text-muted" style="font-size:11px">📱 Teléfono</div>
+                                </td>
+                                <td>
+                                    <span th:class="${p.activo ? 'badge badge-success' : 'badge badge-danger'}" 
+                                          th:text="${p.activo ? 'Activo' : 'Inactivo'}">Activo</span>
+                                </td>
+                                <td>
+                                    <div style="display:flex;gap:8px">
+                                        <!-- Ver empleado - disponible para todos los que tienen acceso a personal -->
+                                        <button class="btn btn-sm btn-secondary" 
+                                                th:onclick="'verEmpleado(' + ${p.id} + ')'"
+                                                title="Ver detalles">
+                                            👁️
+                                        </button>
+                                        
+                                        <!-- Editar empleado - solo para usuarios con permisos de escritura -->
+                                        <button class="btn btn-sm btn-primary" 
+                                                sec:authorize="hasAnyAuthority('USUARIOS_EDITAR','PERSONAL_GESTIONAR')"
+                                                th:onclick="'editarEmpleado(' + ${p.id} + ')'"
+                                                title="Editar">
+                                            ✏️
+                                        </button>
+                                        
+                                        <!-- Gestionar roles - solo para usuarios con permisos de gestión -->
+                                        <button class="btn btn-sm btn-warning" 
+                                                sec:authorize="hasAnyAuthority('USUARIOS_EDITAR','PERSONAL_GESTIONAR')"
+                                                th:onclick="'gestionarRoles(' + ${p.id} + ')'"
+                                                title="Gestionar roles">
+                                            🔐
+                                        </button>
+                                        
+                                        <!-- Cambiar estado - solo para usuarios con permisos de edición -->
+                                        <button class="btn btn-sm btn-success" 
+                                                sec:authorize="hasAnyAuthority('USUARIOS_EDITAR','PERSONAL_GESTIONAR')"
+                                                th:onclick="'cambiarEstado(' + ${p.id} + ')'"
+                                                title="Cambiar estado">
+                                            🔄
+                                        </button>
+                                        
+                                        <!-- Eliminar empleado - solo para usuarios con permisos de eliminación -->
+                                        <button class="btn btn-sm btn-danger" 
+                                                sec:authorize="hasAnyAuthority('USUARIOS_ELIMINAR','PERSONAL_GESTIONAR')"
+                                                th:onclick="'eliminarEmpleado(' + ${p.id} + ')'"
+                                                title="Eliminar">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(lista)}">
+                                <td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">
+                                    👤 No hay empleados registrados
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Incluir modales -->
+    <div th:replace="fragments/modals :: body"></div>
+    
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="brand">Sistema Tributario Empresarial v2.0</div>
+    <div class="splash"></div><div class="splash2"></div><div class="splash3"></div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    
+    // Lista de roles disponibles (se carga dinámicamente)
+    let rolesDisponibles = [];
+    
+    // Cargar roles al inicializar la página
+    async function cargarRoles() {
+        try {
+            const response = await fetch('/personal/roles');
+            if (response.ok) {
+                rolesDisponibles = await response.json();
+            }
+        } catch (error) {
+            console.error('Error al cargar roles:', error);
+        }
+    }
+    
+    
+    // Función para obtener formulario de nuevo empleado
+    function getEmpleadoForm(empleado = null) {
+        const isEdit = empleado !== null;
+        
+        return `
+            <form id="empleadoForm">
+                ${isEdit ? `<input type="hidden" name="id" value="${empleado.id}">` : ''}
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">Nombres *</label>
+                        <input type="text" class="form-control" name="nombres" 
+                               value="${isEdit ? empleado.nombres : ''}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Apellidos *</label>
+                        <input type="text" class="form-control" name="apellidos" 
+                               value="${isEdit ? empleado.apellidos : ''}" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Documento *</label>
+                        <select class="form-control" name="tipoDocumento" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="CC" ${isEdit && empleado.tipoDocumento === 'CC' ? 'selected' : ''}>
+                                Cédula de Ciudadanía
+                            </option>
+                            <option value="CE" ${isEdit && empleado.tipoDocumento === 'CE' ? 'selected' : ''}>
+                                Cédula de Extranjería
+                            </option>
+                            <option value="PASAPORTE" ${isEdit && empleado.tipoDocumento === 'PASAPORTE' ? 'selected' : ''}>
+                                Pasaporte
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Número de Documento *</label>
+                        <input type="text" class="form-control" name="documento" 
+                               value="${isEdit ? empleado.documento : ''}" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">Email Personal *</label>
+                        <input type="email" class="form-control" name="email" 
+                               value="${isEdit ? empleado.email : ''}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control" name="telefono" 
+                               value="${isEdit ? empleado.telefono || '' : ''}">
+                    </div>
+                </div>
+                
+                ${!isEdit ? `
+                <div class="form-group">
+                    <label class="form-label">Acceso al Sistema</label>
+                    <div class="grid grid-cols-2" style="gap:16px">
+                        <div>
+                            <label class="form-label">Email de Usuario (opcional)</label>
+                            <input type="email" class="form-control" name="emailUsuario" 
+                                   placeholder="Se genera automáticamente si se asigna rol">
+                        </div>
+                        <div>
+                            <label class="form-label">Contraseña (opcional)</label>
+                            <input type="password" class="form-control" name="passwordUsuario" 
+                                   placeholder="Se genera automáticamente: Empresa2025!">
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        <strong>🔄 Automático:</strong> Si asigna un rol, se creará automáticamente el usuario con email y contraseña.<br>
+                        <strong>📝 Manual:</strong> Complete estos campos solo si quiere personalizar las credenciales.
+                    </small>
+                </div>
+                ` : ''}
+                
+                <div class="form-group">
+                    <label class="form-label">Dirección</label>
+                    <textarea class="form-control" name="direccion" rows="2">${isEdit ? empleado.direccion || '' : ''}</textarea>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">Cargo *</label>
+                        <input type="text" class="form-control" name="cargo" 
+                               value="${isEdit ? empleado.cargo : ''}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Departamento *</label>
+                        <select class="form-control" name="departamento" required>
+                            <option value="">Seleccionar departamento...</option>
+                            <option value="TRIBUTARIO" ${isEdit && empleado.departamento === 'TRIBUTARIO' ? 'selected' : ''}>
+                                Tributario
+                            </option>
+                            <option value="ADMINISTRACION" ${isEdit && empleado.departamento === 'ADMINISTRACION' ? 'selected' : ''}>
+                                Administración
+                            </option>
+                            <option value="CONTABILIDAD" ${isEdit && empleado.departamento === 'CONTABILIDAD' ? 'selected' : ''}>
+                                Contabilidad
+                            </option>
+                            <option value="SISTEMAS" ${isEdit && empleado.departamento === 'SISTEMAS' ? 'selected' : ''}>
+                                Sistemas
+                            </option>
+                            <option value="RECURSOS_HUMANOS" ${isEdit && empleado.departamento === 'RECURSOS_HUMANOS' ? 'selected' : ''}>
+                                Recursos Humanos
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">Fecha de Ingreso *</label>
+                        <input type="date" class="form-control" name="fechaIngreso" 
+                               value="${isEdit ? empleado.fechaIngreso : ''}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Salario</label>
+                        <input type="number" step="0.01" class="form-control" name="salario" 
+                               value="${isEdit ? empleado.salario || '' : ''}">
+                    </div>
+                </div>
+                
+                
+                <div class="form-group">
+                    <label class="form-label">Observaciones</label>
+                    <textarea class="form-control" name="observaciones" rows="2">${isEdit ? empleado.observaciones || '' : ''}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                        <input type="checkbox" name="activo" ${isEdit ? (empleado.activo ? 'checked' : '') : 'checked'}>
+                        <span>Empleado activo</span>
+                    </label>
+                </div>
+            </form>
+        `;
+    }
+    
+    // Función para abrir modal de empleado
+    function openModalEmpleado(title, empleado = null) {
+        const form = getEmpleadoForm(empleado);
+        openModal(title, form, submitEmpleado);
+    }
+    
+    // Función para enviar nuevo/editar empleado
+    function submitEmpleado() {
+        const form = document.getElementById('empleadoForm');
+        const formData = new FormData(form);
+        
+        // Validaciones adicionales
+        const documento = formData.get('documento');
+        if (documento.length < 6) {
+            showToast('El documento debe tener al menos 6 caracteres', 'error');
+            return;
+        }
+        
+        // Agregar token CSRF
+        formData.append('[[${_csrf.parameterName}]]', '[[${_csrf.token}]]');
+        
+        // Para nuevos empleados, mapear los campos de usuario
+        if (!formData.get('id')) {
+            const emailUsuario = formData.get('emailUsuario');
+            const passwordUsuario = formData.get('passwordUsuario');
+            
+            // Solo agregar si no están vacíos y renombrar correctamente
+            if (emailUsuario && emailUsuario.trim() !== '') {
+                formData.set('email', emailUsuario); // usar set en lugar de append para evitar duplicados
+            }
+            if (passwordUsuario && passwordUsuario.trim() !== '') {
+                formData.append('password', passwordUsuario);
+            }
+            
+            // Remover los campos temporales
+            formData.delete('emailUsuario');
+            formData.delete('passwordUsuario');
+        }
+        
+        const isEdit = formData.get('id');
+        const url = isEdit ? `/personal/${isEdit}` : '/personal';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        fetch(url, {
+            method: method,
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                closeModal();
+                showToast(isEdit ? 'Empleado actualizado exitosamente' : 'Empleado creado exitosamente', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || 'Error en la operación');
+                });
+            }
+        })
+        .catch(error => {
+            showToast('Error: ' + error.message, 'error');
+        });
+    }
+    
+    // Función para ver detalles del empleado
+    function verEmpleado(id) {
+        fetch(`/personal/api/${id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Empleado no encontrado');
+            }
+            return response.json();
+        })
+        .then(empleado => {
+            mostrarDetallesEmpleado(empleado);
+        })
+        .catch(error => {
+            showToast('Error al cargar los detalles: ' + error.message, 'error');
+        });
+    }
+    
+    // Función para mostrar detalles del empleado
+    function mostrarDetallesEmpleado(empleado) {
+        
+        const detalles = `
+            <div style="display:grid;gap:16px">
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div>
+                        <strong>Nombre Completo:</strong><br>
+                        <span style="font-size:18px;font-weight:600">${empleado.nombres} ${empleado.apellidos}</span>
+                    </div>
+                    <div>
+                        <strong>Documento:</strong><br>
+                        <span>${empleado.tipoDocumento || 'CC'}: ${empleado.documento}</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div>
+                        <strong>Email:</strong><br>
+                        <span>${empleado.email || 'No registrado'}</span>
+                    </div>
+                    <div>
+                        <strong>Teléfono:</strong><br>
+                        <span>${empleado.telefono || 'No registrado'}</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div>
+                        <strong>Cargo:</strong><br>
+                        <span>${empleado.cargo}</span>
+                    </div>
+                    <div>
+                        <strong>Departamento:</strong><br>
+                        <span class="badge badge-primary">${empleado.departamento || 'No asignado'}</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div>
+                        <strong>Fecha de Ingreso:</strong><br>
+                        <span>${empleado.fechaIngreso ? new Date(empleado.fechaIngreso).toLocaleDateString('es-ES') : 'No registrada'}</span>
+                    </div>
+                    <div>
+                        <strong>Salario:</strong><br>
+                        <span style="font-size:16px;font-weight:600;color:var(--success)">
+                            ${empleado.salario ? '$' + empleado.salario.toLocaleString() : 'No registrado'}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div>
+                        <strong>Usuario del Sistema:</strong><br>
+                        <span class="badge badge-secondary">${empleado.usuario ? empleado.usuario.email : 'Sin acceso al sistema'}</span>
+                    </div>
+                    <div>
+                        <strong>Estado:</strong><br>
+                        <span class="badge ${empleado.activo ? 'badge-success' : 'badge-danger'}">
+                            ${empleado.activo ? '✅ Activo' : '❌ Inactivo'}
+                        </span>
+                    </div>
+                </div>
+                
+                ${empleado.direccion ? `
+                <div>
+                    <strong>Dirección:</strong><br>
+                    <span>${empleado.direccion}</span>
+                </div>
+                ` : ''}
+                
+                ${empleado.observaciones ? `
+                <div>
+                    <strong>Observaciones:</strong><br>
+                    <span>${empleado.observaciones}</span>
+                </div>
+                ` : ''}
+            </div>
+        `;
+        
+        openModal('👁️ Detalles del Empleado', detalles, null);
+        document.querySelector('.modal-submit').style.display = 'none';
+    }
+    
+    // Función para editar empleado
+    function editarEmpleado(id) {
+        fetch(`/personal/api/${id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Empleado no encontrado');
+            }
+            return response.json();
+        })
+        .then(empleado => {
+            openModalEmpleado('Editar Empleado', empleado);
+        })
+        .catch(error => {
+            showToast('Error al cargar empleado: ' + error.message, 'error');
+        });
+    }
+    
+    // Función para gestionar roles del empleado
+    async function gestionarRoles(id) {
+        try {
+            // Cargar roles disponibles
+            await cargarRoles();
+            
+            // Obtener datos del empleado
+            const response = await fetch(`/personal/api/${id}`);
+            if (!response.ok) {
+                throw new Error('Empleado no encontrado');
+            }
+            const empleado = await response.json();
+            
+            // Obtener rol actual del empleado
+            let rolActualId = null;
+            if (empleado.usuario && empleado.usuario.roles && empleado.usuario.roles.length > 0) {
+                rolActualId = empleado.usuario.roles[0].id;
+            }
+            
+            // Organizar roles por categorías
+            const categorias = {
+                'Administración': rolesDisponibles.filter(r => 
+                    r.nombre.includes('ADMIN') || 
+                    r.nombre.includes('ADMINISTRADOR') ||
+                    r.nombre.includes('GERENTE')
+                ),
+                'Tributario': rolesDisponibles.filter(r => 
+                    r.nombre.includes('TRIBUTARIO') || 
+                    r.nombre.includes('IMPUESTO') ||
+                    r.nombre.includes('FISCAL')
+                ),
+                'Operativo': rolesDisponibles.filter(r => 
+                    r.nombre.includes('OPERADOR') || 
+                    r.nombre.includes('ASISTENTE') ||
+                    r.nombre.includes('EMPLEADO') ||
+                    r.nombre.includes('USUARIO')
+                ),
+                'Otros': rolesDisponibles.filter(r => 
+                    !r.nombre.includes('ADMIN') && 
+                    !r.nombre.includes('ADMINISTRADOR') &&
+                    !r.nombre.includes('GERENTE') &&
+                    !r.nombre.includes('TRIBUTARIO') && 
+                    !r.nombre.includes('IMPUESTO') &&
+                    !r.nombre.includes('FISCAL') &&
+                    !r.nombre.includes('OPERADOR') && 
+                    !r.nombre.includes('ASISTENTE') &&
+                    !r.nombre.includes('EMPLEADO') &&
+                    !r.nombre.includes('USUARIO')
+                )
+            };
+            
+            const rolesForm = `
+                <div style="display:grid;gap:20px;max-height:500px;overflow-y:auto">
+                    <div>
+                        <strong>Gestionar roles para: ${empleado.nombres} ${empleado.apellidos}</strong>
+                        <div style="color:#94a3b8;font-size:14px;margin-top:4px">
+                            ${empleado.usuario ? empleado.usuario.email : 'Sin usuario del sistema'}
+                        </div>
+                    </div>
+                    
+                    ${Object.entries(categorias).map(([categoria, roles]) => {
+                        if (roles.length === 0) return '';
+                        return `
+                            <div>
+                                <h4 style="color:#8b5cf6;font-size:16px;font-weight:600;margin-bottom:12px;border-bottom:1px solid rgba(139, 92, 246, 0.3);padding-bottom:4px">
+                                    ${categoria}
+                                </h4>
+                                <div style="display:grid;gap:8px;padding-left:8px">
+                                    ${roles.map(rol => `
+                                        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border-radius:6px;transition:background-color 0.2s" 
+                                               onmouseover="this.style.backgroundColor='rgba(139, 92, 246, 0.1)'" 
+                                               onmouseout="this.style.backgroundColor='transparent'">
+                                            <input type="checkbox" 
+                                                   name="roles" 
+                                                   value="${rol.id}" 
+                                                   ${rol.id === rolActualId ? 'checked' : ''}
+                                                   onchange="handleRoleChange(this)"
+                                                   style="width:18px;height:18px;accent-color:#8b5cf6">
+                                            <div>
+                                                <div style="font-weight:500;color:#e2e8f0">${rol.nombre}</div>
+                                                <div style="font-size:12px;color:#94a3b8">${rol.descripcion || 'Sin descripción'}</div>
+                                            </div>
+                                        </label>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                    
+                    <div class="form-group">
+                        <label class="form-label">Observaciones</label>
+                        <textarea class="form-control" name="observaciones" rows="2" 
+                                  placeholder="Motivo del cambio de rol..."></textarea>
+                    </div>
+                    
+                    <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;padding-top:16px;border-top:1px solid rgba(148, 163, 184, 0.2)">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removerRolEmpleado(${id})" 
+                                ${!rolActualId ? 'disabled' : ''}>
+                            🗑️ Remover Todos los Roles
+                        </button>
+                        <div style="color:#94a3b8;font-size:12px">
+                            Solo se puede asignar un rol por empleado
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            openModal('🔐 Gestionar Roles', rolesForm, function() {
+                asignarRolEmpleadoCheckbox(id);
+            });
+            
+        } catch (error) {
+            showToast('Error al cargar los datos: ' + error.message, 'error');
+        }
+    }
+    
+    // Función para manejar cambios en checkboxes de roles (solo uno seleccionado)
+    function handleRoleChange(checkbox) {
+        if (checkbox.checked) {
+            // Desmarcar todos los otros checkboxes
+            const allCheckboxes = document.querySelectorAll('input[name="roles"]');
+            allCheckboxes.forEach(cb => {
+                if (cb !== checkbox) {
+                    cb.checked = false;
+                }
+            });
+        }
+    }
+    
+    // Función para asignar rol usando checkboxes
+    function asignarRolEmpleadoCheckbox(id) {
+        const checkedRoles = document.querySelectorAll('input[name="roles"]:checked');
+        
+        if (checkedRoles.length === 0) {
+            showToast('Debe seleccionar un rol', 'error');
+            return;
+        }
+        
+        const rolId = checkedRoles[0].value;
+        
+        fetch(`/personal/${id}/rol?rolId=${rolId}`, {
+            method: 'PUT',
+            headers: {
+                'X-CSRF-TOKEN': '[[${_csrf.token}]]'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                closeModal();
+                showToast('Rol asignado exitosamente', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || 'Error al asignar el rol');
+                });
+            }
+        })
+        .catch(error => {
+            showToast('Error: ' + error.message, 'error');
+        });
+    }
+    
+    // Función para asignar rol al empleado
+    function asignarRolEmpleado(id) {
+        const form = document.querySelector('#modalBase form') || document.querySelector('#modalBase .modal-body');
+        const rolId = form.querySelector('[name="rolId"]').value;
+        
+        if (!rolId) {
+            showToast('Debe seleccionar un rol', 'error');
+            return;
+        }
+        
+        fetch(`/personal/${id}/rol?rolId=${rolId}`, {
+            method: 'PUT',
+            headers: {
+                'X-CSRF-TOKEN': '[[${_csrf.token}]]'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                closeModal();
+                showToast('Rol asignado exitosamente', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || 'Error al asignar el rol');
+                });
+            }
+        })
+        .catch(error => {
+            showToast('Error: ' + error.message, 'error');
+        });
+    }
+    
+    // Función para remover rol del empleado
+    function removerRolEmpleado(id) {
+        openConfirmModal('¿Está seguro de remover el rol de este empleado? Perderá el acceso al sistema.', function() {
+            fetch(`/personal/${id}/rol`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '[[${_csrf.token}]]'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    closeModal();
+                    showToast('Rol removido exitosamente', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(text || 'Error al remover el rol');
+                    });
+                }
+            })
+            .catch(error => {
+                showToast('Error: ' + error.message, 'error');
+            });
+        });
+    }
+    
+    // Función para cambiar estado del empleado
+    function cambiarEstado(id) {
+        fetch(`/personal/api/${id}`)
+        .then(response => response.json())
+        .then(empleado => {
+            const estadoForm = `
+                <div style="display:grid;gap:16px">
+                    <div>
+                        <strong>Cambiar estado para: ${empleado.nombres} ${empleado.apellidos}</strong>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Estado Actual: 
+                            <span class="badge ${empleado.activo ? 'badge-success' : 'badge-danger'}">
+                                ${empleado.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Nuevo Estado *</label>
+                        <select class="form-control" name="activo" required>
+                            <option value="true" ${empleado.activo ? '' : 'selected'}>Activo</option>
+                            <option value="false" ${empleado.activo ? 'selected' : ''}>Inactivo</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Motivo del cambio</label>
+                        <textarea class="form-control" name="motivo" rows="3" 
+                                  placeholder="Describe el motivo del cambio de estado..."></textarea>
+                    </div>
+                </div>
+            `;
+            
+            openModal('🔄 Cambiar Estado', estadoForm, function() {
+                const form = document.querySelector('#modalBase form') || document.querySelector('#modalBase .modal-body');
+                const nuevoEstado = form.querySelector('[name="activo"]').value === 'true';
+                
+                fetch(`/personal/${id}/estado?activo=${nuevoEstado}`, {
+                    method: 'PUT',
+                    headers: {
+                        'X-CSRF-TOKEN': '[[${_csrf.token}]]'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        closeModal();
+                        showToast('Estado actualizado exitosamente', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        throw new Error('Error al cambiar el estado');
+                    }
+                })
+                .catch(error => {
+                    showToast('Error: ' + error.message, 'error');
+                });
+            });
+        })
+        .catch(error => {
+            showToast('Error al cargar los datos del empleado', 'error');
+        });
+    }
+    
+    // Función para eliminar empleado
+    function eliminarEmpleado(id) {
+        fetch(`/personal/api/${id}`)
+        .then(response => response.json())
+        .then(empleado => {
+            const mensaje = `¿Está seguro de eliminar a ${empleado.nombres} ${empleado.apellidos}? Esta acción eliminará también su acceso al sistema y no se puede deshacer.`;
+            
+            openConfirmModal(mensaje, function() {
+                fetch(`/personal/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '[[${_csrf.token}]]'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        closeModal();
+                        showToast('Empleado eliminado exitosamente', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        throw new Error('Error al eliminar el empleado');
+                    }
+                })
+                .catch(error => {
+                    showToast('Error: ' + error.message, 'error');
+                });
+            });
+        })
+        .catch(error => {
+            showToast('Error al cargar los datos del empleado', 'error');
+        });
+    }
+    
+    // Función para exportar personal
+    function exportarPersonal() {
+        window.open('/personal/export', '_blank');
+        showToast('Iniciando descarga...', 'success');
+    }
+    
+    // Función para mostrar notificaciones toast
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+        toast.innerHTML = `
+            <span style="font-size:16px">${icon}</span>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 4000);
+    }
+    
+    // Filtros y búsqueda
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const filterDepartamento = document.getElementById('filterDepartamento');
+        const filterEstado = document.getElementById('filterEstado');
+        const table = document.getElementById('personalTable');
+        
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const departamentoFilter = filterDepartamento.value;
+            const estadoFilter = filterEstado.value;
+            const rows = table.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                if (row.cells.length === 1) return;
+                
+                const empleado = row.cells[0].textContent.toLowerCase();
+                const documento = row.cells[1].textContent.toLowerCase();
+                const cargo = row.cells[2].textContent.toLowerCase();
+                const departamento = row.cells[3].textContent;
+                const estado = row.cells[6].textContent;
+                
+                const matchesSearch = empleado.includes(searchTerm) || documento.includes(searchTerm) || cargo.includes(searchTerm);
+                const matchesDepartamento = !departamentoFilter || departamento.includes(departamentoFilter);
+                const matchesEstado = !estadoFilter || estado.includes(estadoFilter);
+                
+                row.style.display = matchesSearch && matchesDepartamento && matchesEstado ? '' : 'none';
+            });
+        }
+        
+        searchInput.addEventListener('input', filterTable);
+        filterDepartamento.addEventListener('change', filterTable);
+        filterEstado.addEventListener('change', filterTable);
+    });
+    
+    /*]]>*/
+</script>
+</body>
+</html>
+
+
+

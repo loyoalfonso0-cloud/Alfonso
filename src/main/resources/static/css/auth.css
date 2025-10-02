@@ -1,0 +1,20 @@
+:root{--bg1:#0b0b10;--c1:#6c4bf4;--c2:#bb3df5;--c3:#24d2ff;--card:#1b1b24;--text:#e7e7f7;--muted:#a4a4be;--accent:#ffffff}
+*{box-sizing:border-box}body,html{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+.auth-gradient{background:radial-gradient(1200px 600px at 80% 0%,rgba(108,75,244,.25),transparent),radial-gradient(900px 500px at 0% 100%,rgba(187,61,245,.25),transparent),radial-gradient(1200px 600px at 40% 50%,rgba(36,210,255,.2),transparent),#0b0b10;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{position:relative;width:380px;max-width:92vw;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);border-radius:16px;padding:28px;color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.login-card h2{margin-top:0;margin-bottom:18px;font-weight:800;letter-spacing:.5px}
+.input-group{margin-bottom:14px}
+.input-group input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#12121a;color:var(--text);outline:none}
+.input-group input:focus{border-color:var(--c3);box-shadow:0 0 0 3px rgba(36,210,255,.15)}
+.actions{display:flex;align-items:center;justify-content:space-between;margin:8px 2px 16px;color:var(--muted);font-size:.9rem}
+.actions a{color:var(--c3);text-decoration:none}
+.btn-primary{width:100%;padding:12px 16px;border-radius:999px;background:linear-gradient(90deg,var(--c1),var(--c2));border:none;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 10px 25px rgba(108,75,244,.35)}
+.btn-primary:hover{filter:brightness(1.08)}
+.alert{margin-top:12px;color:#ffb4c2}
+.register{margin-top:16px;color:var(--muted);text-align:center}
+.brand{margin-top:10px;text-align:center;color:#cfd3ff;font-weight:600;letter-spacing:.6px}
+.splash,.splash2,.splash3,.splash4,.splash5,.splash6,.splash7,.splash8,.splash9,.splash10,.splash11,.splash12,.splash13,.splash14,.splash15{position:absolute;filter:blur(40px);opacity:.6;border-radius:50%}
+.splash{width:200px;height:200px;top:-60px;left:-60px;background:radial-gradient(circle at 30% 30%,var(--c1),transparent 70%)}
+.splash2{width:180px;height:180px;bottom:-50px;right:-40px;background:radial-gradient(circle at 30% 30%,var(--c2),transparent 70%)}
+.splash3{width:160px;height:160px;top:60%;left:-40px;background:radial-gradient(circle at 30% 30%,var(--c3),transparent 70%)}
+

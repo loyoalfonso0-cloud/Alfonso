@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Auditoría del Sistema - Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons-professional.css}">
+    <link rel="stylesheet" th:href="@{/css/icons.css}">
+    <script th:src="@{/js/theme.js}"></script>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header -->
+        <div class="fullscreen-header">
+            <h2 style="margin:0;color:#e2e8f0;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="page-title-icon">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                    <circle cx="11" cy="11" r="3"/>
+                </svg>
+                Auditoría del Sistema
+            </h2>
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="btn-modern btn-modern-export" onclick="exportarLogs()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Exportar Logs
+                </button>
+                <button class="btn-modern btn-modern-info" onclick="actualizarEstadisticas()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <polyline points="23,4 23,10 17,10"/>
+                        <polyline points="1,20 1,14 7,14"/>
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                    Actualizar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contenido con scroll -->
+        <div class="fullscreen-content">
+            <!-- Estadísticas -->
+            <div class="fullscreen-stats">
+                <div class="stat-card" style="border-left:4px solid #8b5cf6">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Total Logs</div>
+                    <div style="font-size:32px;font-weight:700;color:#8b5cf6" th:text="${estadisticas.totalLogs}">0</div>
+                </div>
+                <div class="stat-card" style="border-left:4px solid #10b981">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Usuarios Activos</div>
+                    <div style="font-size:32px;font-weight:700;color:#10b981" th:text="${estadisticas.usuariosActivosUltimos30Dias}">0</div>
+                </div>
+                <div class="stat-card" style="border-left:4px solid #ef4444">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Errores</div>
+                    <div style="font-size:32px;font-weight:700;color:#ef4444" th:text="${estadisticas.erroresUltimos30Dias}">0</div>
+                </div>
+            </div>
+
+            <!-- Lista de logs -->
+            <div class="fullscreen-table-container">
+                <div style="padding:20px;border-bottom:1px solid rgba(148, 163, 184, 0.2)">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <h3 style="margin:0;color:#e2e8f0;font-size:18px;font-weight:600">📋 Lista de Logs de Auditoría</h3>
+                        <input type="text" id="filtroTermino" class="form-control" style="width:250px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" placeholder="Buscar log...">
+                    </div>
+                </div>
+                
+                <div style="overflow-y:auto;max-height:calc(100vh - 320px)">
+                    <table class="fullscreen-table">
+                            <thead>
+                                <tr>
+                                    <th style="padding:12px">ID</th>
+                                    <th style="padding:12px">Usuario</th>
+                                    <th style="padding:12px">Cédula</th>
+                                    <th style="padding:12px">Acción</th>
+                                    <th style="padding:12px">Módulo</th>
+                                    <th style="padding:12px">Entidad</th>
+                                    <th style="padding:12px">Descripción</th>
+                                    <th style="padding:12px">Fecha/Hora</th>
+                                    <th style="padding:12px">IP Address</th>
+                                    <th style="padding:12px">Estado</th>
+                                    <th style="padding:12px">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody">
+                                <tr th:each="log : ${logs}">
+                                    <td style="padding:12px" th:text="${log.id}">1</td>
+                                    <td style="padding:12px">
+                                        <span class="badge badge-info" th:text="${log.usuario}">Usuario</span>
+                                    </td>
+                                    <td style="padding:12px">
+                                        <span class="badge badge-warning" th:text="${log.cedulaPersonal ?: 'N/A'}">12345678</span>
+                                    </td>
+                                    <td style="padding:12px">
+                                        <span class="badge"
+                                              th:class="'badge-' + ${log.accion == 'CREATE' ? 'success' : 
+                                                                   log.accion == 'UPDATE' ? 'warning' : 
+                                                                   log.accion == 'DELETE' ? 'danger' : 
+                                                                   log.accion == 'LOGIN' ? 'info' : 'secondary'}"
+                                              th:text="${log.accion == 'CREATE' ? 'CREAR' : 
+                                                        log.accion == 'UPDATE' ? 'ACTUALIZAR' : 
+                                                        log.accion == 'DELETE' ? 'ELIMINAR' : 
+                                                        log.accion == 'EXPORT' ? 'EXPORTAR' : 
+                                                        log.accion == 'LOGIN' ? 'INICIAR SESIÓN' : 
+                                                        log.accion == 'LOGOUT' ? 'CERRAR SESIÓN' : 
+                                                        log.accion == 'VIEW' ? 'VER' : 
+                                                        log.accion == 'READ' ? 'LEER' : log.accion}">CREAR</span>
+                                    </td>
+                                    <td style="padding:12px" th:text="${log.modulo}">MODULO</td>
+                                    <td style="padding:12px" th:text="${log.entidad ?: '-'}">-</td>
+                                    <td style="padding:12px">
+                                        <div style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" 
+                                             th:text="${log.descripcion}" 
+                                             th:title="${log.descripcion}">Descripción</div>
+                                    </td>
+                                    <td style="padding:12px" th:text="${#temporals.format(log.fechaHora, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</td>
+                                    <td style="padding:12px" th:text="${log.ipAddress ?: '-'}">127.0.0.1</td>
+                                    <td style="padding:12px">
+                                        <span class="badge"
+                                              th:class="'badge-' + ${log.resultado == 'SUCCESS' ? 'success' : 'danger'}"
+                                              th:text="${log.resultado == 'SUCCESS' ? 'EXITOSO' : log.resultado == 'ERROR' ? 'ERROR' : log.resultado}">EXITOSO</span>
+                                    </td>
+                                    <td style="padding:12px">
+                                        <button class="btn btn-info btn-sm"
+                                                th:onclick="'verDetalleLog(' + ${log.id} + ')'"
+                                                title="Ver detalles">
+                                            👁️
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Modales -->
+<div th:replace="fragments/modals :: body"></div>
+
+<!-- Variables CSS para temas -->
+<style>
+:root {
+    /* Tema Claro (por defecto) */
+    --modal-bg: #ffffff;
+    --modal-border: #e5e7eb;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --label-color: #6b7280;
+    --field-bg: #f9fafb;
+    --field-border: #e5e7eb;
+    --hover-bg: #f3f4f6;
+    --footer-bg: #f9fafb;
+    --button-bg: #ffffff;
+    --button-border: #d1d5db;
+    --button-text: #374151;
+    --button-hover: #f3f4f6;
+}
+
+/* Tema Oscuro */
+[data-theme="dark"] {
+    --modal-bg: #1f2937;
+    --modal-border: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --label-color: #9ca3af;
+    --field-bg: #374151;
+    --field-border: #4b5563;
+    --hover-bg: #374151;
+    --footer-bg: #111827;
+    --button-bg: #374151;
+    --button-border: #4b5563;
+    --button-text: #f9fafb;
+    --button-hover: #4b5563;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    #detalleLogModal .modal-content {
+        width: 95% !important;
+        margin: 5% auto !important;
+    }
+    
+    #detalleLogModal .modal-body > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+}
+</style>
+
+<!-- Modal de Detalles del Log -->
+<div id="detalleLogModal" class="modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.4);backdrop-filter:blur(8px)">
+    <div class="modal-content" style="background:var(--modal-bg, #ffffff);margin:3% auto;padding:0;border-radius:16px;width:90%;max-width:700px;max-height:90vh;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.15);border:1px solid var(--modal-border, #e5e7eb)">
+        <div class="modal-header" style="padding:24px 24px 16px 24px;border-bottom:1px solid var(--modal-border, #e5e7eb);display:flex;align-items:center;justify-content:space-between">
+            <h3 class="modal-title" style="margin:0;font-size:20px;font-weight:600;color:var(--text-primary, #1f2937);display:flex;align-items:center;gap:8px">
+                <span style="font-size:24px">🔍</span>
+                Detalles del Log de Auditoría
+            </h3>
+            <button class="modal-close" onclick="cerrarModalDetalle()" style="background:none;border:none;color:var(--text-secondary, #6b7280);font-size:24px;cursor:pointer;padding:8px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;width:40px;height:40px" onmouseover="this.style.background='var(--hover-bg, #f3f4f6)'" onmouseout="this.style.background='none'">
+                &times;
+            </button>
+        </div>
+        <div class="modal-body" style="padding:24px;color:var(--text-primary, #1f2937);max-height:calc(90vh - 140px);overflow-y:auto">
+            <!-- Grid de información en dos columnas -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+                <!-- Columna Izquierda -->
+                <div>
+                    <div style="margin-bottom:20px">
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">ID del Log:</label>
+                        <div id="detalle-id" style="color:var(--text-primary, #1f2937);font-weight:500;font-size:15px">-</div>
+                    </div>
+                    <div style="margin-bottom:20px">
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">Usuario:</label>
+                        <div id="detalle-usuario" style="color:var(--text-primary, #1f2937);font-weight:500;font-size:15px">-</div>
+                    </div>
+                    <div style="margin-bottom:20px">
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">Cédula Personal:</label>
+                        <div id="detalle-cedula" style="color:#f59e0b;font-weight:600;font-size:15px">-</div>
+                    </div>
+                    <div style="margin-bottom:20px">
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">Acción:</label>
+                        <div id="detalle-accion" style="font-size:15px">-</div>
+                    </div>
+                    <div style="margin-bottom:20px">
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">Estado:</label>
+                        <div id="detalle-resultado" style="font-size:15px">-</div>
+                    </div>
+                </div>
+                
+                <!-- Columna Derecha -->
+                <div>
+                    <div style="margin-bottom:20px">
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">Fecha:</label>
+                        <div id="detalle-fecha" style="color:var(--text-primary, #1f2937);font-weight:500;font-size:15px">-</div>
+                    </div>
+                    <div style="margin-bottom:20px">
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">Módulo:</label>
+                        <div id="detalle-modulo" style="color:var(--text-primary, #1f2937);font-weight:500;font-size:15px">-</div>
+                    </div>
+                    <div style="margin-bottom:20px">
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">IP Address:</label>
+                        <div id="detalle-ip" style="color:var(--text-primary, #1f2937);font-weight:500;font-size:15px">-</div>
+                    </div>
+                    <div style="margin-bottom:20px">
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">Entidad:</label>
+                        <div id="detalle-entidad" style="color:var(--text-primary, #1f2937);font-weight:500;font-size:15px">-</div>
+                    </div>
+                    <div style="margin-bottom:20px">
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">ID Entidad:</label>
+                        <div id="detalle-entidad-id" style="color:var(--text-primary, #1f2937);font-weight:500;font-size:15px">-</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Descripción -->
+            <div style="margin-bottom:24px;padding-top:20px;border-top:1px solid var(--modal-border, #e5e7eb)">
+                <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">Descripción:</label>
+                <div id="detalle-descripcion" style="color:var(--text-primary, #1f2937);font-weight:400;font-size:15px;line-height:1.5;padding:16px;background:var(--field-bg, #f9fafb);border-radius:8px;border:1px solid var(--field-border, #e5e7eb);min-height:60px">-</div>
+            </div>
+
+            <!-- Valores Anteriores y Nuevos (solo para actualizaciones) -->
+            <div id="valores-container" style="display:none;margin-bottom:24px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                    <div>
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">Valores Anteriores:</label>
+                        <pre id="detalle-valores-anteriores" style="color:var(--text-primary, #1f2937);background:var(--field-bg, #f9fafb);padding:16px;border-radius:8px;border:1px solid var(--field-border, #e5e7eb);font-size:13px;max-height:200px;overflow-y:auto;margin:0;font-family:monospace;white-space:pre-wrap">-</pre>
+                    </div>
+                    <div>
+                        <label style="display:block;color:var(--label-color, #6b7280);font-size:14px;font-weight:500;margin-bottom:8px">Valores Nuevos:</label>
+                        <pre id="detalle-valores-nuevos" style="color:var(--text-primary, #1f2937);background:var(--field-bg, #f9fafb);padding:16px;border-radius:8px;border:1px solid var(--field-border, #e5e7eb);font-size:13px;max-height:200px;overflow-y:auto;margin:0;font-family:monospace;white-space:pre-wrap">-</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensaje de Error (solo para errores) -->
+            <div id="error-container" style="display:none;margin-bottom:24px">
+                <label style="display:block;color:#dc2626;font-size:14px;font-weight:500;margin-bottom:8px">Mensaje de Error:</label>
+                <div id="detalle-error" style="color:#dc2626;background:#fef2f2;padding:16px;border-radius:8px;border:1px solid #fecaca;font-size:15px;line-height:1.5">-</div>
+            </div>
+            </div>
+        <div class="modal-footer" style="padding:20px 24px;border-top:1px solid var(--modal-border, #e5e7eb);display:flex;justify-content:flex-end;background:var(--footer-bg, #f9fafb)">
+            <button onclick="cerrarModalDetalle()" style="padding:10px 24px;border-radius:8px;border:1px solid var(--button-border, #d1d5db);background:var(--button-bg, #ffffff);color:var(--button-text, #374151);cursor:pointer;font-size:14px;font-weight:500;transition:all 0.2s;box-shadow:0 1px 2px rgba(0,0,0,0.05)" onmouseover="this.style.background='var(--button-hover, #f3f4f6)'" onmouseout="this.style.background='var(--button-bg, #ffffff)'">
+                Cancelar
+            </button>
+        </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variables globales
+let currentPage = 0;
+let currentSize = 10;
+let currentFilters = {};
+
+// Función para aplicar filtros
+function aplicarFiltros() {
+    currentFilters = {
+        usuario: document.getElementById('filtroUsuario').value,
+        modulo: document.getElementById('filtroModulo').value,
+        accion: document.getElementById('filtroAccion').value,
+        fechaInicio: document.getElementById('filtroFechaInicio').value,
+        fechaFin: document.getElementById('filtroFechaFin').value,
+        ip: document.getElementById('filtroIP').value,
+        termino: document.getElementById('filtroTermino').value
+    };
+    currentPage = 0;
+    cargarLogs();
+}
+
+// Función para limpiar filtros
+function limpiarFiltros() {
+    document.getElementById('filtroUsuario').value = '';
+    document.getElementById('filtroModulo').value = '';
+    document.getElementById('filtroAccion').value = '';
+    document.getElementById('filtroFechaInicio').value = '';
+    document.getElementById('filtroFechaFin').value = '';
+    document.getElementById('filtroIP').value = '';
+    document.getElementById('filtroTermino').value = '';
+    currentFilters = {};
+    currentPage = 0;
+    cargarLogs();
+}
+
+// Función para mostrar/ocultar filtros expandidos
+function toggleFiltros() {
+    const filtrosDiv = document.getElementById('filtrosExpandidos');
+    if (filtrosDiv.style.display === 'none') {
+        filtrosDiv.style.display = 'block';
+    } else {
+        filtrosDiv.style.display = 'none';
+    }
+}
+
+// Función para cambiar página
+function cambiarPagina(page) {
+    currentPage = page;
+    cargarLogs();
+}
+
+// Función para cambiar tamaño de página
+function cambiarTamanoPagina() {
+    currentSize = parseInt(document.getElementById('pageSize').value);
+    currentPage = 0; // Resetear a la primera página
+    cargarLogs();
+}
+
+// Función para cargar logs via AJAX
+function cargarLogs() {
+    const params = new URLSearchParams({
+        page: currentPage,
+        size: currentSize,
+        ...currentFilters
+    });
+
+    fetch(`/auditoria/api/logs?${params}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        actualizarTablaLogs(data.logs);
+        actualizarPaginacion(data);
+        document.getElementById('totalLogs').textContent = data.totalElements;
+    })
+    .catch(error => {
+        console.error('Error al cargar logs:', error);
+        showAlert('Error al cargar los logs', 'error');
+    });
+}
+
+// Función para actualizar la tabla de logs
+function actualizarTablaLogs(logs) {
+    const tbody = document.getElementById('logsTableBody');
+    tbody.innerHTML = '';
+
+    logs.forEach(log => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${log.id}</td>
+            <td><span class="badge badge-info">${log.usuario}</span></td>
+            <td><span class="badge badge-warning">${log.cedulaPersonal || 'N/A'}</span></td>
+            <td><span class="badge badge-${getAccionBadgeClass(log.accion)}">${traducirAccion(log.accion)}</span></td>
+            <td>${log.modulo}</td>
+            <td>${log.entidad || '-'}</td>
+            <td>
+                <div style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" 
+                     title="${log.descripcion || ''}">${log.descripcion || ''}</div>
+            </td>
+            <td>${formatearFecha(log.fechaHora)}</td>
+            <td>${log.ipAddress || '-'}</td>
+            <td><span class="badge badge-${log.resultado === 'SUCCESS' ? 'success' : 'danger'}">${log.resultado === 'SUCCESS' ? 'EXITOSO' : log.resultado === 'ERROR' ? 'ERROR' : log.resultado}</span></td>
+            <td>
+                <button class="btn-action btn-action-info" onclick="verDetalleLog(${log.id})" title="Ver detalles">👁️</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Función para actualizar paginación
+function actualizarPaginacion(data) {
+    document.getElementById('currentPageDisplay').textContent = data.currentPage + 1;
+    document.getElementById('totalPagesDisplay').textContent = data.totalPages;
+    document.getElementById('totalElementsDisplay').textContent = data.totalElements;
+    
+    // Actualizar estado de botones
+    const btnPrimera = document.getElementById('btnPrimera');
+    const btnAnterior = document.getElementById('btnAnterior');
+    const btnSiguiente = document.getElementById('btnSiguiente');
+    const btnUltima = document.getElementById('btnUltima');
+    
+    // Habilitar/deshabilitar botones según la página actual
+    btnPrimera.disabled = data.currentPage === 0;
+    btnAnterior.disabled = data.currentPage === 0;
+    btnSiguiente.disabled = data.currentPage + 1 >= data.totalPages;
+    btnUltima.disabled = data.currentPage + 1 >= data.totalPages;
+    
+    // Actualizar clases CSS para botones deshabilitados
+    if (data.currentPage === 0) {
+        btnPrimera.className = 'btn btn-sm btn-outline-secondary';
+        btnAnterior.className = 'btn btn-sm btn-outline-secondary';
+    } else {
+        btnPrimera.className = 'btn btn-sm btn-outline-primary';
+        btnAnterior.className = 'btn btn-sm btn-outline-primary';
+    }
+    
+    if (data.currentPage + 1 >= data.totalPages) {
+        btnSiguiente.className = 'btn btn-sm btn-outline-secondary';
+        btnUltima.className = 'btn btn-sm btn-outline-secondary';
+    } else {
+        btnSiguiente.className = 'btn btn-sm btn-outline-primary';
+        btnUltima.className = 'btn btn-sm btn-outline-primary';
+    }
+    
+    // Actualizar onclick para botones dinámicos
+    btnAnterior.onclick = () => cambiarPagina(data.currentPage - 1);
+    btnSiguiente.onclick = () => cambiarPagina(data.currentPage + 1);
+    btnUltima.onclick = () => cambiarPagina(data.totalPages - 1);
+}
+
+// Función auxiliar para clases de badges de acción
+function getAccionBadgeClass(accion) {
+    switch(accion) {
+        case 'CREATE': return 'success';
+        case 'UPDATE': return 'warning';
+        case 'DELETE': return 'danger';
+        case 'LOGIN': return 'info';
+        default: return 'secondary';
+    }
+}
+
+// Función para formatear fecha
+function formatearFecha(fechaHora) {
+    const fecha = new Date(fechaHora);
+    return fecha.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Función para ver detalle de log
+function verDetalleLog(id) {
+    console.log('Solicitando detalles del log ID:', id);
+    
+    fetch(`/auditoria/api/logs/${id}`)
+        .then(response => {
+            console.log('Respuesta recibida:', response.status);
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(log => {
+            console.log('Datos del log recibidos:', log);
+            
+            // Llenar los campos del modal
+            document.getElementById('detalle-id').textContent = log.id || '-';
+            document.getElementById('detalle-usuario').textContent = log.usuario || '-';
+            document.getElementById('detalle-cedula').textContent = log.cedulaPersonal || 'N/A';
+            document.getElementById('detalle-accion').innerHTML = `<span class="badge badge-${getAccionColor(log.accion)}">${traducirAccion(log.accion) || '-'}</span>`;
+            document.getElementById('detalle-modulo').textContent = log.modulo || '-';
+            document.getElementById('detalle-entidad').textContent = log.entidad || '-';
+            document.getElementById('detalle-entidad-id').textContent = log.entidadId || '-';
+            document.getElementById('detalle-descripcion').textContent = log.descripcion || '-';
+            document.getElementById('detalle-ip').textContent = log.ipAddress || '-';
+            document.getElementById('detalle-resultado').innerHTML = `<span class="badge badge-${log.resultado === 'SUCCESS' ? 'success' : 'danger'}">${log.resultado === 'SUCCESS' ? 'EXITOSO' : log.resultado === 'ERROR' ? 'ERROR' : (log.resultado || '-')}</span>`;
+            
+            // Formatear fecha
+            if (log.fechaHora) {
+                const fecha = new Date(log.fechaHora);
+                document.getElementById('detalle-fecha').textContent = fecha.toLocaleString('es-ES');
+            } else {
+                document.getElementById('detalle-fecha').textContent = '-';
+            }
+            
+            // Mostrar/ocultar secciones según el contenido
+            const valoresContainer = document.getElementById('valores-container');
+            const errorContainer = document.getElementById('error-container');
+            
+            // Valores anteriores y nuevos (para actualizaciones)
+            if (log.valoresAnteriores || log.valoresNuevos) {
+                valoresContainer.style.display = 'block';
+                document.getElementById('detalle-valores-anteriores').textContent = 
+                    log.valoresAnteriores ? formatJSON(log.valoresAnteriores) : '-';
+                document.getElementById('detalle-valores-nuevos').textContent = 
+                    log.valoresNuevos ? formatJSON(log.valoresNuevos) : '-';
+            } else {
+                valoresContainer.style.display = 'none';
+            }
+            
+            // Mensaje de error (para errores)
+            if (log.mensajeError) {
+                errorContainer.style.display = 'block';
+                document.getElementById('detalle-error').textContent = log.mensajeError;
+            } else {
+                errorContainer.style.display = 'none';
+            }
+            
+            // Mostrar el modal usando el diseño estándar
+            const modal = document.getElementById('detalleLogModal');
+            modal.style.display = 'block';
+            
+            console.log('Modal abierto con diseño estándar');
+        })
+        .catch(error => {
+            console.error('Error completo:', error);
+            showAlert(`Error al cargar los detalles del log: ${error.message}`, 'error');
+        });
+}
+
+// Función auxiliar para obtener el color del badge según la acción
+function getAccionColor(accion) {
+    switch(accion) {
+        case 'CREATE': return 'success';
+        case 'UPDATE': return 'warning';
+        case 'DELETE': return 'danger';
+        case 'EXPORT': return 'info';
+        default: return 'secondary';
+    }
+}
+
+// Función para traducir acciones al español
+function traducirAccion(accion) {
+    switch(accion) {
+        case 'CREATE': return 'CREAR';
+        case 'UPDATE': return 'ACTUALIZAR';
+        case 'DELETE': return 'ELIMINAR';
+        case 'EXPORT': return 'EXPORTAR';
+        case 'LOGIN': return 'INICIAR SESIÓN';
+        case 'LOGOUT': return 'CERRAR SESIÓN';
+        case 'VIEW': return 'VER';
+        case 'READ': return 'LEER';
+        default: return accion;
+    }
+}
+
+// Función auxiliar para formatear JSON
+function formatJSON(jsonString) {
+    try {
+        const obj = JSON.parse(jsonString);
+        return JSON.stringify(obj, null, 2);
+    } catch (e) {
+        return jsonString;
+    }
+}
+
+// Función para cerrar el modal
+function cerrarModalDetalle() {
+    const modal = document.getElementById('detalleLogModal');
+    modal.style.display = 'none';
+    console.log('Modal cerrado');
+}
+
+// Función para exportar logs
+function exportarLogs() {
+    const params = new URLSearchParams(currentFilters);
+    window.open(`/auditoria/export?${params}`, '_blank');
+}
+
+// Función para actualizar estadísticas
+function actualizarEstadisticas() {
+    fetch('/auditoria/api/estadisticas', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Actualizar estadísticas en la interfaz
+        location.reload(); // Por simplicidad, recargar la página
+    })
+    .catch(error => {
+        console.error('Error al actualizar estadísticas:', error);
+        showAlert('Error al actualizar estadísticas', 'error');
+    });
+}
+
+// Función para mostrar alertas
+function showAlert(message, type = 'info') {
+    const alertClass = type === 'error' ? 'alert-danger' : 
+                      type === 'success' ? 'alert-success' : 
+                      type === 'warning' ? 'alert-warning' : 'alert-info';
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert ${alertClass}`;
+    alertDiv.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;min-width:300px';
+    alertDiv.textContent = message;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Inicializar cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar filtros de fecha por defecto (últimos 7 días)
+    const ahora = new Date();
+    const hace7Dias = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    document.getElementById('filtroFechaInicio').value = hace7Dias.toISOString().slice(0, 16);
+    document.getElementById('filtroFechaFin').value = ahora.toISOString().slice(0, 16);
+    
+    // Agregar listener para búsqueda rápida
+    document.getElementById('filtroTermino').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') {
+            aplicarFiltros();
+        }
+    });
+});
+</script>
+
+</body>
+</html>

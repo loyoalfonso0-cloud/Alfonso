@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Gestión de Retenciones - Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons-professional.css}">
+    <link rel="stylesheet" th:href="@{/css/icons.css}">
+    <script th:src="@{/js/theme.js}"></script>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header -->
+        <div class="fullscreen-header">
+            <h2 style="margin:0;color:#e2e8f0;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="page-title-icon">
+                    <line x1="12" y1="1" x2="12" y2="23"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                Gestión de Retenciones
+            </h2>
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="btn-modern btn-modern-success" sec:authorize="hasAnyAuthority('RETENCIONES_WRITE','RETENCIONES_GESTIONAR')" onclick="openModal('Nueva Retención', getRetencionForm(), submitRetencion)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nueva Retención
+                </button>
+                <button class="btn-modern btn-modern-export" onclick="exportarRetenciones()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contenido con scroll -->
+        <div class="fullscreen-content">
+            <!-- Estadísticas rápidas -->
+            <div class="fullscreen-stats">
+                <div class="stat-card" style="border-left:4px solid #8b5cf6">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Total Retenciones</div>
+                    <div style="font-size:32px;font-weight:700;color:#8b5cf6" th:text="${estadisticas.total}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #10b981">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Este Mes</div>
+                    <div style="font-size:32px;font-weight:700;color:#10b981" th:text="${estadisticas.esteMes}">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #f59e0b">
+                    <div style="font-size:14px;margin-bottom:8px;color:#94a3b8">Monto Total</div>
+                    <div style="font-size:32px;font-weight:700;color:#f59e0b" th:text="'$' + ${#numbers.formatDecimal(estadisticas.montoTotal, 0, 2)}">$0</div>
+                </div>
+            </div>
+
+            <!-- Tabla de retenciones -->
+            <div class="fullscreen-table-container">
+                <div style="padding:20px;border-bottom:1px solid rgba(148, 163, 184, 0.2)">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <h3 style="margin:0;color:#e2e8f0;font-size:18px;font-weight:600">📋 Lista de Retenciones</h3>
+                        <div style="display:flex;gap:12px;align-items:center">
+                            <input type="text" placeholder="Buscar retención..." class="form-control" style="width:200px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="searchInput">
+                            <select class="form-select" style="width:150px;background:rgba(15, 23, 42, 0.6);border:1px solid rgba(148, 163, 184, 0.3);color:#e2e8f0" id="filterEstado">
+                                <option value="">Todos los estados</option>
+                                <option value="PENDIENTE">Pendiente</option>
+                                <option value="APLICADA">Aplicada</option>
+                                <option value="ANULADA">Anulada</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="overflow-y:auto;max-height:calc(100vh - 320px)">
+                    <table class="fullscreen-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Contribuyente</th>
+                                <th>Concepto</th>
+                                <th>Fecha</th>
+                                <th>Porcentaje</th>
+                                <th>Base Imponible</th>
+                                <th>Monto Retenido</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="retencionesTable">
+                            <tr th:each="retencion : ${retenciones}">
+                                <td><strong th:text="${retencion.id}">1</strong></td>
+                                <td>
+                                    <div style="font-weight:500" th:text="${retencion.contribuyente?.razonSocial}">Empresa ABC S.A.</div>
+                                    <div class="text-muted" style="font-size:12px" th:text="${retencion.contribuyente?.rif}">V-12345678-9</div>
+                                </td>
+                                <td th:text="${retencion.concepto}">Concepto de retención</td>
+                                <td th:text="${#temporals.format(retencion.fecha, 'dd/MM/yyyy')}">15/01/2024</td>
+                                <td th:text="${retencion.porcentaje} + '%'">3.50%</td>
+                                <td th:text="'$' + ${#numbers.formatDecimal(retencion.montoBase, 0, 2)}">$10,000.00</td>
+                                <td th:text="'$' + ${#numbers.formatDecimal(retencion.montoRetenido, 0, 2)}">$350.00</td>
+                                <td>
+                                    <span th:class="'badge ' + (${retencion.estado.name()} == 'APLICADA' ? 'badge-success' : (${retencion.estado.name()} == 'PENDIENTE' ? 'badge-warning' : 'badge-danger'))" 
+                                          th:text="${retencion.estado.descripcion}">Aplicada</span>
+                                </td>
+                                <td>
+                                    <div style="display:flex;gap:8px">
+                                        <button class="btn btn-sm btn-info" th:onclick="'verRetencion(' + ${retencion.id} + ')'">👁️</button>
+                                        <button class="btn btn-sm btn-secondary" 
+                                                sec:authorize="hasAnyAuthority('RETENCIONES_WRITE','RETENCIONES_GESTIONAR')"
+                                                th:onclick="'editarRetencion(' + ${retencion.id} + ')'">
+                                            ✏️
+                                        </button>
+                                        <button class="btn btn-sm btn-success" 
+                                                sec:authorize="hasAnyAuthority('RETENCIONES_WRITE','RETENCIONES_GESTIONAR')"
+                                                th:onclick="'cambiarEstado(' + ${retencion.id} + ')'">
+                                            🔄
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" 
+                                                sec:authorize="hasAnyAuthority('RETENCIONES_DELETE','RETENCIONES_GESTIONAR')"
+                                                th:onclick="'eliminarRetencion(' + ${retencion.id} + ')'">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Incluir modales -->
+    <div th:replace="fragments/modals :: body"></div>
+    
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="brand">Sistema Tributario Empresarial v2.0</div>
+    <div class="splash"></div><div class="splash2"></div><div class="splash3"></div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    
+    // Función para obtener formulario de nueva retención
+    function getRetencionForm(retencion = null) {
+        const isEdit = retencion !== null;
+        const contribuyentes = /*[[${contribuyentes}]]*/ [];
+        
+        let contribuyentesOptions = '<option value="">Seleccionar contribuyente...</option>';
+        contribuyentes.forEach(contrib => {
+            const selected = isEdit && retencion?.contribuyente?.id == contrib.id ? 'selected' : '';
+            contribuyentesOptions += `<option value="${contrib.id}" ${selected}>${contrib.razonSocial}</option>`;
+        });
+        
+        return `
+            <form id="retencionForm">
+                ${isEdit ? `<input type="hidden" name="id" value="${retencion.id}">` : ''}
+                
+                <div class="form-group">
+                    <label class="form-label">Contribuyente *</label>
+                    <select class="form-control" name="contribuyente.id" required>
+                        ${contribuyentesOptions}
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">Fecha de Retención *</label>
+                        <input type="date" class="form-control" name="fecha" 
+                               value="${isEdit ? retencion.fecha : ''}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Porcentaje (%) *</label>
+                        <input type="number" step="0.0001" class="form-control" name="porcentaje" 
+                               value="${isEdit ? retencion.porcentaje : ''}" 
+                               oninput="calcularRetencion()" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Concepto *</label>
+                    <textarea class="form-control" name="concepto" rows="2" required 
+                              placeholder="Descripción del concepto de retención">${isEdit ? retencion.concepto || '' : ''}</textarea>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">Monto Base *</label>
+                        <input type="number" step="0.01" class="form-control" name="montoBase" 
+                               value="${isEdit ? retencion.montoBase : ''}" 
+                               oninput="calcularRetencion()" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monto Retenido</label>
+                        <input type="number" step="0.01" class="form-control" name="montoRetenido" 
+                               value="${isEdit ? retencion.montoRetenido : '0'}" readonly>
+                    </div>
+                </div>
+                
+            </form>
+        `;
+    }
+    
+    // Función para calcular automáticamente la retención
+    function calcularRetencion() {
+        const porcentajeInput = document.querySelector('input[name="porcentaje"]');
+        const baseInput = document.querySelector('input[name="montoBase"]');
+        const montoInput = document.querySelector('input[name="montoRetenido"]');
+        
+        if (porcentajeInput && baseInput && montoInput) {
+            const porcentaje = parseFloat(porcentajeInput.value) || 0;
+            const base = parseFloat(baseInput.value) || 0;
+            
+            montoInput.value = (base * porcentaje / 100).toFixed(2);
+        }
+    }
+    
+    // Función para enviar nueva/editar retención
+    function submitRetencion() {
+        const form = document.getElementById('retencionForm');
+        const formData = new FormData(form);
+        
+        // Obtener token CSRF desde meta tags
+        const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        
+        // Convertir FormData a objeto para envío JSON
+        const data = {};
+        for (let [key, value] of formData.entries()) {
+            if (key.includes('.')) {
+                const [parent, child] = key.split('.');
+                if (!data[parent]) data[parent] = {};
+                data[parent][child] = value;
+            } else {
+                data[key] = value;
+            }
+        }
+        
+        const isEdit = formData.get('id');
+        const url = isEdit ? `/tributario/retenciones/${isEdit}` : '/tributario/retenciones';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                [header]: token
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                showToast(isEdit ? 'Retención actualizada exitosamente' : 'Retención creada exitosamente', 'success');
+                closeModal();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || 'Error en la operación');
+                });
+            }
+        })
+        .catch(error => {
+            showToast('Error: ' + error.message, 'error');
+        });
+    }
+    
+    // Función para ver detalles de la retención
+    function verRetencion(id) {
+        // Datos de ejemplo - en producción vendría del servidor
+        const retencion = {
+            numero: 'RET-001-2024',
+            fecha: '2024-01-15',
+            contribuyente: 'Empresa ABC S.A.',
+            rif: 'V-12345678-9',
+            tipo: 'RENTA',
+            tasa: 3.5,
+            baseImponible: 10000,
+            montoRetenido: 350,
+            concepto: 'Servicios profesionales',
+            estado: 'APLICADA'
+        };
+        
+        const detalles = `
+            <div style="display:grid;gap:16px">
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div>
+                        <strong>Número:</strong><br>
+                        <span style="font-size:18px;font-weight:600">${retencion.numero}</span>
+                    </div>
+                    <div>
+                        <strong>Fecha:</strong><br>
+                        <span>${new Date(retencion.fecha).toLocaleDateString('es-ES')}</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <strong>Contribuyente:</strong><br>
+                    <span>${retencion.contribuyente}</span><br>
+                    <span class="text-muted">${retencion.rif}</span>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div>
+                        <strong>Tipo:</strong><br>
+                        <span class="badge badge-primary">${retencion.tipo}</span>
+                    </div>
+                    <div>
+                        <strong>Tasa:</strong><br>
+                        <span>${retencion.tasa}%</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap:16px">
+                    <div>
+                        <strong>Base Imponible:</strong><br>
+                        <span style="font-size:16px;font-weight:600">$${retencion.baseImponible.toLocaleString()}</span>
+                    </div>
+                    <div>
+                        <strong>Monto Retenido:</strong><br>
+                        <span style="font-size:16px;font-weight:600;color:var(--success)">$${retencion.montoRetenido.toLocaleString()}</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <strong>Concepto:</strong><br>
+                    <span>${retencion.concepto}</span>
+                </div>
+                
+                <div>
+                    <strong>Estado:</strong><br>
+                    <span class="badge badge-success">${retencion.estado}</span>
+                </div>
+            </div>
+        `;
+        
+        openModal('👁️ Detalles de la Retención', detalles, null);
+        document.querySelector('.modal-submit').style.display = 'none';
+    }
+    
+    // Función para editar retención
+    function editarRetencion(id) {
+        // Obtener token CSRF
+        const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        
+        // Cargar datos de la retención desde el servidor
+        fetch(`/tributario/retenciones/${id}`, {
+            method: 'GET',
+            headers: {
+                [header]: token
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Error al cargar los datos de la retención');
+            }
+        })
+        .then(retencion => {
+            // Formatear la fecha para el input date
+            if (retencion.fecha) {
+                retencion.fecha = new Date(retencion.fecha).toISOString().split('T')[0];
+            }
+            
+            // Abrir modal con datos prellenados
+            openModal('✏️ Editar Retención', getRetencionForm(retencion), submitRetencion);
+        })
+        .catch(error => {
+            showToast('Error al cargar los datos: ' + error.message, 'error');
+        });
+    }
+    
+    // Función para imprimir retención
+    function imprimirRetencion(id) {
+        window.open(`/tributario/retenciones/${id}/print`, '_blank');
+        showToast('Generando comprobante...', 'success');
+    }
+    
+    // Función para cambiar estado de retención
+    function cambiarEstado(id) {
+        // Obtener token CSRF
+        const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        
+        // Primero obtener la retención actual para mostrar el estado actual
+        fetch(`/tributario/retenciones/${id}`, {
+            method: 'GET',
+            headers: {
+                [header]: token
+            }
+        })
+        .then(response => response.json())
+        .then(retencion => {
+            const estadoActual = retencion.estado?.name || retencion.estado;
+            
+            const estados = [
+                { value: 'PENDIENTE', label: 'Pendiente', class: 'badge-warning' },
+                { value: 'APLICADA', label: 'Aplicada', class: 'badge-success' },
+                { value: 'ANULADA', label: 'Anulada', class: 'badge-danger' }
+            ];
+            
+            const formEstado = `
+                <form id="cambiarEstadoForm">
+                    <div class="form-group">
+                        <label class="form-label">Seleccionar nuevo estado:</label>
+                        <div style="display:grid;gap:12px;margin-top:16px">
+                            ${estados.map(estado => `
+                                <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px;border:1px solid #ddd;border-radius:8px;${estadoActual === estado.value ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+                                    <input type="radio" name="estado" value="${estado.value}" style="margin:0" ${estadoActual === estado.value ? 'disabled' : ''}>
+                                    <span class="badge ${estado.class}">${estado.label}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                </form>
+            `;
+            
+            openModal('🔄 Cambiar Estado de Retención', formEstado, function() {
+                const selectedEstado = document.querySelector('input[name="estado"]:checked');
+                if (!selectedEstado) {
+                    showToast('Debe seleccionar un nuevo estado', 'error');
+                    return;
+                }
+                const nuevoEstado = selectedEstado.value;
+                
+                // Enviar cambio de estado
+                const formData = new FormData();
+                formData.append('estado', nuevoEstado);
+                
+                fetch(`/tributario/retenciones/${id}/cambiar-estado`, {
+                    method: 'POST',
+                    headers: {
+                        [header]: token
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showToast('Estado cambiado exitosamente', 'success');
+                        closeModal();
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        return response.text().then(text => {
+                            throw new Error(text || 'Error al cambiar el estado');
+                        });
+                    }
+                })
+                .catch(error => {
+                    showToast('Error: ' + error.message, 'error');
+                });
+            });
+        })
+        .catch(error => {
+            showToast('Error al cargar los datos: ' + error.message, 'error');
+        });
+    }
+    
+    // Función para eliminar retención
+    function eliminarRetencion(id) {
+        openConfirmModal('¿Está seguro de eliminar esta retención? Esta acción no se puede deshacer.', function() {
+            // Obtener token CSRF
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            
+            fetch(`/tributario/retenciones/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    [header]: token
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('Retención eliminada exitosamente', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(text || 'Error al eliminar la retención');
+                    });
+                }
+            })
+            .catch(error => {
+                showToast('Error: ' + error.message, 'error');
+            });
+        });
+    }
+    
+    // Función para exportar retenciones
+    function exportarRetenciones() {
+        window.open('/tributario/retenciones/exportar', '_blank');
+        showToast('Iniciando descarga...', 'success');
+    }
+    
+    // Función para mostrar notificaciones toast
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+        toast.innerHTML = `
+            <span style="font-size:16px">${icon}</span>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 4000);
+    }
+    
+    // Filtros y búsqueda
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const filterEstado = document.getElementById('filterEstado');
+        const table = document.getElementById('retencionesTable');
+        
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const estadoFilter = filterEstado.value;
+            const rows = table.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                if (row.cells.length <= 1) return; // Skip empty rows
+                
+                const id = row.cells[0].textContent.toLowerCase();
+                const contribuyente = row.cells[1].textContent.toLowerCase();
+                const concepto = row.cells[2].textContent.toLowerCase();
+                const estadoBadge = row.cells[7].querySelector('.badge');
+                const estado = estadoBadge ? estadoBadge.textContent.trim() : '';
+                
+                const matchesSearch = id.includes(searchTerm) || 
+                                    contribuyente.includes(searchTerm) || 
+                                    concepto.includes(searchTerm);
+                
+                let matchesEstado = true;
+                if (estadoFilter) {
+                    // Mapear los valores del filtro con los textos mostrados
+                    const estadoMap = {
+                        'PENDIENTE': 'Pendiente',
+                        'APLICADA': 'Aplicada', 
+                        'ANULADA': 'Anulada'
+                    };
+                    matchesEstado = estado === estadoMap[estadoFilter];
+                }
+                
+                row.style.display = matchesSearch && matchesEstado ? '' : 'none';
+            });
+        }
+        
+        if (searchInput) searchInput.addEventListener('input', filterTable);
+        if (filterEstado) filterEstado.addEventListener('change', filterTable);
+    });
+    
+    /*]]>*/
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tasas Simple</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; }
+        .main-content { margin-left: 250px; padding: 20px; }
+        .stat-card { border-left: 4px solid #8b5cf6; }
+        .success-banner { 
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<div class="main-content">
+    <div class="success-banner">
+        <h1>🏠 Tasas Municipales - Controlador Simple</h1>
+        <p><strong>Estado:</strong> <span th:text="${mensaje}">Funcionando</span></p>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <h5>Total Tasas</h5>
+                    <h3 th:text="${totalTasas}">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Activas</h5>
+                    <h3 th:text="${activasTasas}">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Pagadas</h5>
+                    <h3 th:text="${pagadasTasas}">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Vencidas</h5>
+                    <h3 th:text="${vencidasTasas}">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="alert alert-success">
+        <h4>✅ ¡Controlador Simple Funcionando!</h4>
+        <p>Este controlador NO tiene:</p>
+        <ul>
+            <li>❌ Dependencias de TasaService</li>
+            <li>❌ Anotaciones de seguridad</li>
+            <li>❌ Consultas a base de datos</li>
+            <li>❌ Lógica compleja</li>
+        </ul>
+        <p><strong>Si esta página funciona, el problema está en las dependencias del controlador principal.</strong></p>
+    </div>
+    
+    <div class="alert alert-info">
+        <h4>🔍 URLs de Prueba:</h4>
+        <ul>
+            <li><code>/test-tasas</code> - Controlador completamente independiente</li>
+            <li><code>/tasas-simple</code> - Esta página (controlador sin dependencias)</li>
+            <li><code>/tasas</code> - Controlador principal (con problemas)</li>
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

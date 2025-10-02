@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title th:text="${titulo}">Panel - Sistema Tributario</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/fullscreen-layout.css}">
+    <script th:src="@{/js/theme.js}"></script>
+</head>
+<body>
+<div class="fullscreen-container">
+    <!-- Efectos decorativos -->
+    <div class="fullscreen-effects">
+        <div class="fullscreen-splash1"></div>
+        <div class="fullscreen-splash2"></div>
+        <div class="fullscreen-splash3"></div>
+        <div class="fullscreen-splash4"></div>
+    </div>
+    
+    <!-- Navegación -->
+    <aside th:replace="fragments/nav :: body"></aside>
+    
+    <!-- Contenido principal -->
+    <main class="fullscreen-main">
+        <!-- Header ultra profesional -->
+        <div class="fullscreen-header">
+            <div class="header-content">
+                <div class="header-title-section">
+                    <div class="header-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"/>
+                            <rect x="14" y="3" width="7" height="7"/>
+                            <rect x="14" y="14" width="7" height="7"/>
+                            <rect x="3" y="14" width="7" height="7"/>
+                        </svg>
+                    </div>
+                    <div class="header-text">
+                        <h1 class="header-title" th:text="${titulo}">Mi Panel Tributario</h1>
+                        <p class="header-subtitle">Centro de Control Empresarial</p>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="theme-toggle-premium" onclick="toggleTheme()" id="themeToggle">
+                        <div class="toggle-track-premium">
+                            <div class="toggle-icon-premium sun-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="5"/>
+                                    <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                                </svg>
+                            </div>
+                            <div class="toggle-icon-premium moon-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                                </svg>
+                            </div>
+                            <div class="toggle-slider-premium"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenido con scroll -->
+        <div class="fullscreen-content">
+            <!-- Estadísticas rápidas con iconos profesionales -->
+            <div class="fullscreen-stats">
+                <div class="stat-card" style="border-left:4px solid #8b5cf6">
+                    <div class="stat-header">
+                        <div class="stat-icon" style="background:rgba(139, 92, 246, 0.1);color:#8b5cf6">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 21h18"/>
+                                <path d="M5 21V7l8-4v18"/>
+                                <path d="M19 21V11l-6-4"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Contribuyentes</div>
+                            <div class="stat-value" style="color:#8b5cf6" th:text="${estadisticas.totalContribuyentes}">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #10b981">
+                    <div class="stat-header">
+                        <div class="stat-icon" style="background:rgba(16, 185, 129, 0.1);color:#10b981">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Impuestos</div>
+                            <div class="stat-value" style="color:#10b981" th:text="${estadisticas.totalImpuestos}">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #f59e0b">
+                    <div class="stat-header">
+                        <div class="stat-icon" style="background:rgba(245, 158, 11, 0.1);color:#f59e0b">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14,2 14,8 20,8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Comprobantes</div>
+                            <div class="stat-value" style="color:#f59e0b" th:text="${estadisticas.totalComprobantes}">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #ef4444">
+                    <div class="stat-header">
+                        <div class="stat-icon" style="background:rgba(239, 68, 68, 0.1);color:#ef4444">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"/>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Retenciones</div>
+                            <div class="stat-value" style="color:#ef4444" th:text="${estadisticas.totalRetenciones}">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #06b6d4">
+                    <div class="stat-header">
+                        <div class="stat-icon" style="background:rgba(6, 182, 212, 0.1);color:#06b6d4">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Personal</div>
+                            <div class="stat-value" style="color:#06b6d4" th:text="${estadisticas.totalPersonal}">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #a855f7">
+                    <div class="stat-header">
+                        <div class="stat-icon" style="background:rgba(168, 85, 247, 0.1);color:#a855f7">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 12l2 2 4-4"/>
+                                <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                                <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                                <path d="M13 12h3a2 2 0 0 1 2 2v1"/>
+                                <path d="M13 12h-3a2 2 0 0 0-2 2v1"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Roles</div>
+                            <div class="stat-value" style="color:#a855f7" th:text="${estadisticas.totalRoles}">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="border-left:4px solid #84cc16">
+                    <div class="stat-header">
+                        <div class="stat-icon" style="background:rgba(132, 204, 22, 0.1);color:#84cc16">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 9V5a3 3 0 0 0-6 0v4"/>
+                                <rect x="2" y="9" width="20" height="12" rx="2" ry="2"/>
+                                <circle cx="12" cy="15" r="1"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Logs del Sistema</div>
+                            <div class="stat-value" style="color:#84cc16" th:text="${estadisticas.totalLogs}">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sección de Acceso Rápido Mejorada -->
+            <div class="quick-access-container">
+                <div class="quick-access-title">
+                    <h3>
+                        <span class="lightning">⚡</span>
+                        Acceso Rápido
+                        <span class="lightning">⚡</span>
+                    </h3>
+                    <p>Navegación directa a los módulos del sistema</p>
+                </div>
+                
+                <div class="quick-access-grid">
+                    <!-- Contribuyentes -->
+                    <div th:if="${permisos.contribuyentes}" class="quick-access-card contribuyentes" onclick="window.location.href='/tributario/contribuyentes'">
+                        <div class="quick-access-header">
+                            <div class="quick-access-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 21h18"/>
+                                    <path d="M5 21V7l8-4v18"/>
+                                    <path d="M19 21V11l-6-4"/>
+                                </svg>
+                            </div>
+                            <div class="quick-access-info">
+                                <div class="quick-access-label">Gestión de</div>
+                                <div class="quick-access-title-text" style="color:#10b981">Contribuyentes</div>
+                            </div>
+                        </div>
+                        <div class="quick-access-arrow">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                
+                    <!-- Impuestos -->
+                    <div th:if="${permisos.impuestos}" class="quick-access-card impuestos" onclick="window.location.href='/tributario/impuestos'">
+                        <div class="quick-access-header">
+                            <div class="quick-access-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 6v6l4 2"/>
+                                </svg>
+                            </div>
+                            <div class="quick-access-info">
+                                <div class="quick-access-label">Gestión de</div>
+                                <div class="quick-access-title-text" style="color:#f59e0b">Impuestos</div>
+                            </div>
+                        </div>
+                        <div class="quick-access-arrow">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                
+                    <!-- Retenciones -->
+                    <div th:if="${permisos.retenciones}" class="quick-access-card retenciones" onclick="window.location.href='/tributario/retenciones'">
+                        <div class="quick-access-header">
+                            <div class="quick-access-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="1" x2="12" y2="23"/>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                            </div>
+                            <div class="quick-access-info">
+                                <div class="quick-access-label">Gestión de</div>
+                                <div class="quick-access-title-text" style="color:#ef4444">Retenciones</div>
+                            </div>
+                        </div>
+                        <div class="quick-access-arrow">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                
+                    <!-- Comprobantes -->
+                    <div th:if="${permisos.comprobantes}" class="quick-access-card comprobantes" onclick="window.location.href='/tributario/comprobantes'">
+                        <div class="quick-access-header">
+                            <div class="quick-access-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                </svg>
+                            </div>
+                            <div class="quick-access-info">
+                                <div class="quick-access-label">Gestión de</div>
+                                <div class="quick-access-title-text" style="color:#06b6d4">Comprobantes</div>
+                            </div>
+                        </div>
+                        <div class="quick-access-arrow">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                
+                    <!-- Declaraciones -->
+                    <div th:if="${permisos.declaraciones}" class="quick-access-card declaraciones" onclick="window.location.href='/tributario'">
+                        <div class="quick-access-header">
+                            <div class="quick-access-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
+                                    <line x1="9" y1="9" x2="10" y2="9"/>
+                                    <line x1="9" y1="13" x2="15" y2="13"/>
+                                    <line x1="9" y1="17" x2="15" y2="17"/>
+                                </svg>
+                            </div>
+                            <div class="quick-access-info">
+                                <div class="quick-access-label">Gestión de</div>
+                                <div class="quick-access-title-text" style="color:#8b5cf6">Declaraciones</div>
+                            </div>
+                        </div>
+                        <div class="quick-access-arrow">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                
+                    <!-- Roles -->
+                    <div th:if="${permisos.roles}" class="quick-access-card roles" onclick="window.location.href='/roles'">
+                        <div class="quick-access-header">
+                            <div class="quick-access-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 12l2 2 4-4"/>
+                                    <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                                    <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                                    <path d="M13 12h3a2 2 0 0 1 2 2v1"/>
+                                    <path d="M13 12h-3a2 2 0 0 0-2 2v1"/>
+                                </svg>
+                            </div>
+                            <div class="quick-access-info">
+                                <div class="quick-access-label">Gestión de</div>
+                                <div class="quick-access-title-text" style="color:#a855f7">Roles</div>
+                            </div>
+                        </div>
+                        <div class="quick-access-arrow">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                
+                    <!-- Personal -->
+                    <div th:if="${permisos.personal}" class="quick-access-card personal" onclick="window.location.href='/personal'">
+                        <div class="quick-access-header">
+                            <div class="quick-access-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                            <div class="quick-access-info">
+                                <div class="quick-access-label">Gestión de</div>
+                                <div class="quick-access-title-text" style="color:#64748b">Personal</div>
+                            </div>
+                        </div>
+                        <div class="quick-access-arrow">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                
+                    <!-- Auditoría -->
+                    <div th:if="${permisos.auditoria}" class="quick-access-card auditoria" onclick="window.location.href='/auditoria'">
+                        <div class="quick-access-header">
+                            <div class="quick-access-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 9V5a3 3 0 0 0-6 0v4"/>
+                                    <rect x="2" y="9" width="20" height="12" rx="2" ry="2"/>
+                                    <circle cx="12" cy="15" r="1"/>
+                                </svg>
+                            </div>
+                            <div class="quick-access-info">
+                                <div class="quick-access-label">Sistema de</div>
+                                <div class="quick-access-title-text" style="color:#84cc16">Auditoría</div>
+                            </div>
+                        </div>
+                        <div class="quick-access-arrow">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleTheme() {
+    const body = document.body;
+    const toggle = document.getElementById('themeToggle');
+    
+    if (body.classList.contains('light-mode')) {
+        body.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+        toggle.classList.remove('active');
+    } else {
+        body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+        toggle.classList.add('active');
+    }
+}
+
+// Aplicar tema guardado al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme');
+    const toggle = document.getElementById('themeToggle');
+    
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        toggle.classList.add('active');
+    }
+});
+</script>
+
+</body>
+</html>
